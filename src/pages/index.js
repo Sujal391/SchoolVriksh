@@ -2480,7 +2480,7 @@ export default function UltraModernHome() {
     // <div className="font-sans overflow-hidden bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white relative">
     <div className="font-sans overflow-hidden bg-gradient-to-br from-orange-500 via-orange-600 to-orange-600 text-white relative">
       {/* Animated Cursor Trail */}
-      <div
+      {/* <div
         className="fixed w-6 h-6 pointer-events-none z-50 mix-blend-difference"
         style={{
           left: mousePosition.x - 12,
@@ -2489,10 +2489,10 @@ export default function UltraModernHome() {
         }}
       >
         <div className="w-full h-full bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full blur-sm animate-pulse"></div>
-      </div>
+      </div> */}
 
       {/* Dynamic Particle System */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      {/* <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {[...Array(30)].map((_, i) => (
           <div
             key={i}
@@ -2516,7 +2516,7 @@ export default function UltraModernHome() {
             ></div>
           </div>
         ))}
-      </div>
+      </div> */}
 
       {/* Glassmorphism Header */}
       <header
@@ -2542,7 +2542,7 @@ export default function UltraModernHome() {
                 <div className="absolute -top-2 -right-2 w-5 h-5 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full"></div> */}
               </div>
               <div>
-                <span className="text-4xl font-black bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
+                <span className="text-4xl font-black bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
                   SkoolVriksh
                 </span>
                 <div className="text-xs text-purple-300 font-bold tracking-widest">
@@ -2652,13 +2652,13 @@ export default function UltraModernHome() {
               linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px)
             `,
               backgroundSize: "50px 50px",
-              animation: "grid-move 20s linear infinite",
+              // animation: "grid-move 20s linear infinite",
             }}
           ></div>
         </div>
 
         {/* Dynamic Background Orbs */}
-        <div className="absolute inset-0">
+        {/* <div className="absolute inset-0">
           <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-r from-purple-600/20 to-cyan-600/20 rounded-full blur-3xl animate-pulse"></div>
           <div
             className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-r from-rose-600/20 to-orange-600/20 rounded-full blur-3xl animate-pulse"
@@ -2668,22 +2668,22 @@ export default function UltraModernHome() {
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-full blur-3xl animate-pulse"
             style={{ animationDelay: "4s" }}
           ></div>
-        </div>
+        </div> */}
 
         <div className="container mx-auto px-6 pt-32 pb-20 relative z-10">
           <div className="text-center max-w-6xl mx-auto">
             {/* Revolutionary Badge */}
             <div className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-900/50 to-cyan-900/50 backdrop-blur-xl rounded-full text-purple-300 font-bold mb-8 border border-purple-500/30 shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 group">
-              <FaRocket className="mr-3 text-purple-400 group-hover:animate-spin" />
+              <FaRocket className="mr-3 text-purple-400" />
               <span className="flex items-center text-lg">
                 #1 Quantum Education Platform in the Universe
-                <HiSparkles className="ml-3 text-cyan-400 animate-pulse" />
+                <HiSparkles className="ml-3 text-cyan-400" />
               </span>
             </div>
 
             {/* Mind-Blowing Headline */}
             <h1 className="text-7xl lg:text-9xl font-black leading-tight mb-8">
-              <span className="block bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
+              <span className="block bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
                 QUANTUM
               </span>
               <span className="block bg-gradient-to-r from-cyan-400 via-purple-400 to-rose-400 bg-clip-text text-transparent">
@@ -2714,7 +2714,7 @@ export default function UltraModernHome() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   <span className="relative flex items-center justify-center">
-                    <FaRocket className="mr-4 group-hover:animate-bounce text-2xl" />
+                    <FaRocket className="mr-4 text-2xl" />
                     Enter Quantum Dashboard
                     <FaArrowRight className="ml-4 group-hover:translate-x-3 transition-transform text-2xl" />
                   </span>
@@ -2725,7 +2725,7 @@ export default function UltraModernHome() {
                   <button className="group relative bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 text-white font-bold py-6 px-16 rounded-full hover:scale-110 transition-all duration-500 shadow-2xl shadow-purple-500/30 text-2xl overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     <span className="relative flex items-center justify-center">
-                      <FaAtom className="mr-4 group-hover:animate-spin text-2xl" />
+                      <FaAtom className="mr-4 text-2xl" />
                       Start Quantum Journey
                       <FaArrowRight className="ml-4 group-hover:translate-x-3 transition-transform text-2xl" />
                     </span>
@@ -2734,7 +2734,7 @@ export default function UltraModernHome() {
 
                   <button className="group relative bg-transparent text-purple-300 font-bold py-6 px-16 rounded-full border-4 border-purple-500/50 hover:bg-purple-500/20 hover:text-white hover:scale-110 transition-all duration-500 text-2xl backdrop-blur-xl">
                     <span className="flex items-center">
-                      <FaVideo className="mr-4 group-hover:animate-pulse text-2xl" />
+                      <FaVideo className="mr-4 text-2xl" />
                       Experience Demo
                     </span>
                   </button>
@@ -2750,7 +2750,7 @@ export default function UltraModernHome() {
                     className={`absolute -inset-4 bg-gradient-to-r ${stat.gradient} rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-all duration-500`}
                   ></div>
                   <div className="relative bg-slate-900/50 backdrop-blur-xl rounded-3xl p-8 border border-purple-500/20 hover:border-purple-400/40 transition-all duration-500 group-hover:scale-105">
-                    <div className="text-6xl mb-4 text-center group-hover:animate-pulse">
+                    <div className="text-6xl mb-4 text-center">
                       {stat.icon}
                     </div>
                     <div
@@ -2769,7 +2769,7 @@ export default function UltraModernHome() {
         </div>
 
         {/* Quantum Scroll Indicator */}
-        <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2">
+        {/* <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2">
           <div className="flex flex-col items-center space-y-4 animate-bounce">
             <div className="w-8 h-16 border-2 border-purple-400 rounded-full flex justify-center backdrop-blur-xl">
               <div className="w-2 h-4 bg-gradient-to-b from-purple-400 to-cyan-400 rounded-full mt-2 animate-pulse"></div>
@@ -2778,7 +2778,7 @@ export default function UltraModernHome() {
               Scroll to Explore
             </span>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Quantum Modules Section */}
@@ -2790,17 +2790,16 @@ export default function UltraModernHome() {
             <div
               className="absolute inset-0"
               style={{
-                backgroundImage: `radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.2) 0%, transparent 50%),
-                               radial-gradient(circle at 75% 75%, rgba(6, 182, 212, 0.2) 0%, transparent 50%)`,
-              }}
-            ></div>
+                backgroundImage: `radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.2) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(6, 182, 212, 0.2) 0%, transparent 50%)`,
+              }}>
+            </div>
           </div>
         </div>
 
         <div className="container mx-auto px-6 relative z-10">
           <div className="text-center mb-24">
             <div className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-900/50 to-cyan-900/50 backdrop-blur-xl rounded-full text-purple-300 font-bold mb-8 border border-purple-500/30">
-              <FaAtom className="mr-3 animate-spin" />
+              <FaAtom className="mr-3" />
               Quantum Core Modules
             </div>
             <h2 className="text-6xl lg:text-8xl font-black mb-8">
@@ -2835,7 +2834,7 @@ export default function UltraModernHome() {
                   {/* Glow Effect */}
                   {activeModule === index && (
                     <div
-                      className={`absolute -inset-4 bg-gradient-to-r ${module.gradient} rounded-3xl blur-2xl opacity-30 animate-pulse`}
+                      className={`absolute -inset-4 bg-gradient-to-r ${module.gradient} rounded-3xl opacity-20`}
                     ></div>
                   )}
 
@@ -2892,7 +2891,7 @@ export default function UltraModernHome() {
             {/* Module Showcase */}
             <div className="relative">
               <div
-                className={`absolute -inset-8 bg-gradient-to-r ${coreModules[activeModule].gradient} rounded-3xl blur-3xl opacity-20 animate-pulse`}
+                className={`absolute -inset-8 bg-gradient-to-r ${coreModules[activeModule].gradient} rounded-3xl opacity-10`}
               ></div>
 
               <div className="relative bg-slate-900/70 backdrop-blur-2xl rounded-3xl shadow-2xl p-12 border border-slate-700/50">
@@ -2900,7 +2899,7 @@ export default function UltraModernHome() {
                   <div
                     className={`inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-r ${coreModules[activeModule].gradient} text-white mb-8 shadow-2xl`}
                   >
-                    <div className="text-5xl animate-pulse">
+                    <div className="text-5xl">
                       {coreModules[activeModule].icon}
                     </div>
                   </div>
@@ -2940,17 +2939,14 @@ export default function UltraModernHome() {
         {/* Dynamic Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-purple-950/50 to-slate-950"></div>
-          <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-r from-purple-600/10 to-cyan-600/10 rounded-full blur-3xl animate-pulse"></div>
-          <div
-            className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-r from-rose-600/10 to-orange-600/10 rounded-full blur-3xl animate-pulse"
-            style={{ animationDelay: "3s" }}
-          ></div>
+          <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-r from-purple-600/5 to-cyan-600/5 rounded-full"></div>
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-r from-rose-600/5 to-orange-600/5 rounded-full"></div>
         </div>
 
         <div className="container mx-auto px-6 relative z-10">
           <div className="text-center mb-24">
             <div className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-900/50 to-cyan-900/50 backdrop-blur-xl rounded-full text-purple-300 font-bold mb-8 border border-purple-500/30">
-              <HiSparkles className="mr-3 animate-spin" />
+              <HiSparkles className="mr-3" />
               100+ Quantum Features
             </div>
             <h2 className="text-6xl lg:text-8xl font-black mb-8">
@@ -2993,7 +2989,7 @@ export default function UltraModernHome() {
                       <div className="flex items-start space-x-6">
                         <div className="flex-shrink-0">
                           <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-500 group-hover:scale-110 border border-slate-600/30">
-                            <div className="text-3xl group-hover:animate-pulse">
+                            <div className="text-3xl">
                               {feature.icon}
                             </div>
                           </div>
@@ -3018,28 +3014,15 @@ export default function UltraModernHome() {
 
       {/* Quantum Benefits Section */}
       <div className="py-32 relative overflow-hidden">
-        {/* Animated Background */}
+        {/* Simplified Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-950/30 via-slate-950 to-cyan-950/30"></div>
-          <div className="absolute top-0 left-0 w-full h-full opacity-10">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `conic-gradient(from 0deg at 50% 50%, 
-                rgba(139, 92, 246, 0.3) 0deg, 
-                rgba(6, 182, 212, 0.3) 120deg, 
-                rgba(236, 72, 153, 0.3) 240deg, 
-                rgba(139, 92, 246, 0.3) 360deg)`,
-                animation: "spin 30s linear infinite",
-              }}
-            ></div>
-          </div>
         </div>
 
         <div className="container mx-auto px-6 relative z-10">
           <div className="text-center mb-24">
             <div className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-900/50 to-cyan-900/50 backdrop-blur-xl rounded-full text-purple-300 font-bold mb-8 border border-purple-500/30">
-              <FaInfinity className="mr-3 animate-pulse" />
+              <FaInfinity className="mr-3" />
               Quantum Advantages
             </div>
             <h2 className="text-6xl lg:text-8xl font-black mb-8">
@@ -3101,7 +3084,7 @@ export default function UltraModernHome() {
         <div className="container mx-auto px-6 relative z-10">
           <div className="text-center mb-24">
             <div className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-900/50 to-cyan-900/50 backdrop-blur-xl rounded-full text-purple-300 font-bold mb-8 border border-purple-500/30">
-              <FaHeart className="mr-3 text-rose-400 animate-pulse" />
+              <FaHeart className="mr-3 text-rose-400" />
               Quantum Testimonials
             </div>
             <h2 className="text-6xl lg:text-8xl font-black mb-8">
@@ -3122,7 +3105,7 @@ export default function UltraModernHome() {
 
           <div className="max-w-6xl mx-auto">
             <div className="relative group">
-              <div className="absolute -inset-12 bg-gradient-to-r from-purple-600/20 via-cyan-600/20 to-rose-600/20 rounded-3xl blur-3xl animate-pulse"></div>
+              <div className="absolute -inset-12 bg-gradient-to-r from-purple-600/10 via-cyan-600/10 to-rose-600/10 rounded-3xl"></div>
 
               <div className="relative bg-slate-900/80 backdrop-blur-2xl rounded-3xl p-16 lg:p-20 border border-purple-500/30 group-hover:border-purple-400/50 transition-all duration-700">
                 <div className="text-center">
@@ -3131,8 +3114,7 @@ export default function UltraModernHome() {
                     {[1, 2, 3, 4, 5].map((i) => (
                       <FaStar
                         key={i}
-                        className="text-purple-400 text-4xl mx-2 animate-pulse hover:scale-125 transition-transform cursor-pointer"
-                        style={{ animationDelay: `${i * 0.2}s` }}
+                        className="text-purple-400 text-4xl mx-2 hover:scale-125 transition-transform cursor-pointer"
                       />
                     ))}
                   </div>
@@ -3151,7 +3133,7 @@ export default function UltraModernHome() {
                   {/* Author Info */}
                   <div className="flex items-center justify-center space-x-8">
                     <div className="relative">
-                      <div className="absolute -inset-4 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full blur opacity-50 animate-pulse"></div>
+                      <div className="absolute -inset-4 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full opacity-30"></div>
                       <img
                         src={testimonials[currentTestimonial].image}
                         alt={testimonials[currentTestimonial].name}
@@ -3194,26 +3176,15 @@ export default function UltraModernHome() {
 
       {/* Ultimate CTA Section */}
       <div className="py-32 relative overflow-hidden">
-        {/* Epic Background */}
+        {/* Simplified Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-slate-950 to-cyan-950"></div>
-          <div className="absolute inset-0 opacity-30">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.4) 0%, transparent 50%),
-                               radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.4) 0%, transparent 50%),
-                               radial-gradient(circle at 40% 60%, rgba(236, 72, 153, 0.4) 0%, transparent 50%)`,
-                animation: "pulse 8s ease-in-out infinite",
-              }}
-            ></div>
-          </div>
         </div>
 
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-6xl mx-auto text-center">
             <div className="inline-flex items-center px-10 py-5 bg-gradient-to-r from-purple-900/50 to-cyan-900/50 backdrop-blur-xl rounded-full text-purple-300 font-bold mb-12 border border-purple-500/30 text-xl">
-              <FaRocket className="mr-4 animate-bounce text-2xl" />
+              <FaRocket className="mr-4 text-2xl" />
               Ready for Quantum Leap?
             </div>
 
@@ -3245,7 +3216,7 @@ export default function UltraModernHome() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   <span className="relative flex items-center justify-center">
-                    <FaAtom className="mr-4 group-hover:animate-spin text-3xl" />
+                    <FaAtom className="mr-4 text-3xl" />
                     Enter Quantum Realm
                     <FaArrowRight className="ml-4 group-hover:translate-x-4 transition-transform text-3xl" />
                   </span>
@@ -3256,7 +3227,7 @@ export default function UltraModernHome() {
                   <button className="group relative bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 text-white font-bold py-8 px-20 rounded-full hover:scale-110 transition-all duration-500 shadow-2xl shadow-purple-500/30 text-3xl overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     <span className="relative flex items-center justify-center">
-                      <FaRocket className="mr-4 group-hover:animate-bounce text-3xl" />
+                      <FaRocket className="mr-4 text-3xl" />
                       Start Quantum Journey
                       <FaArrowRight className="ml-4 group-hover:translate-x-4 transition-transform text-3xl" />
                     </span>
@@ -3265,7 +3236,7 @@ export default function UltraModernHome() {
 
                   <button className="group relative bg-transparent text-purple-300 font-bold py-8 px-20 rounded-full border-4 border-purple-500/50 hover:bg-purple-500/20 hover:text-white hover:scale-110 transition-all duration-500 text-3xl backdrop-blur-xl">
                     <span className="flex items-center">
-                      <FaVideo className="mr-4 group-hover:animate-pulse text-3xl" />
+                      <FaVideo className="mr-4 text-3xl" />
                       Experience Magic
                     </span>
                   </button>
@@ -3297,7 +3268,7 @@ export default function UltraModernHome() {
                   className="flex items-center justify-center space-x-4 group"
                 >
                   <div
-                    className={`bg-gradient-to-r ${item.color} text-slate-900 text-3xl p-3 rounded-full group-hover:animate-bounce shadow-lg`}
+                    className={`bg-gradient-to-r ${item.color} text-slate-900 text-3xl p-3 rounded-full shadow-lg`}
                   >
                     {item.icon}
                   </div>
@@ -3322,7 +3293,7 @@ export default function UltraModernHome() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-24">
               <div className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-900/50 to-cyan-900/50 backdrop-blur-xl rounded-full text-purple-300 font-bold mb-8 border border-purple-500/30">
-                <FaEnvelope className="mr-3 animate-bounce" />
+                <FaEnvelope className="mr-3" />
                 Quantum Communication
               </div>
               <h2 className="text-6xl lg:text-8xl font-black mb-8">
@@ -3456,7 +3427,7 @@ export default function UltraModernHome() {
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-rose-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
                       <span className="relative flex items-center justify-center">
-                        <FaRocket className="mr-4 group-hover/btn:animate-bounce text-2xl" />
+                        <FaRocket className="mr-4 text-2xl" />
                         Send Quantum Message
                         <FaArrowRight className="ml-4 group-hover/btn:translate-x-3 transition-transform text-2xl" />
                       </span>
@@ -3490,10 +3461,9 @@ export default function UltraModernHome() {
             <div className="lg:col-span-1">
               <div className="flex items-center space-x-4 mb-10 group">
                 <div className="relative">
-                  <div className="w-20 h-20 bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl group-hover:shadow-purple-500/50 transition-all duration-500 group-hover:scale-110 animate-pulse">
+                  <div className="w-20 h-20 bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl group-hover:shadow-purple-500/50 transition-all duration-500 group-hover:scale-110">
                     <FaGraduationCap className="text-white text-4xl" />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full animate-ping"></div>
                   <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full"></div>
                 </div>
                 <div>
@@ -3527,7 +3497,7 @@ export default function UltraModernHome() {
                     key={index}
                     className={`w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center hover:bg-gradient-to-r hover:${social.gradient} transition-all duration-500 cursor-pointer hover:scale-110 hover:shadow-lg group border border-slate-700 hover:border-transparent`}
                   >
-                    <span className="text-2xl group-hover:animate-bounce">
+                    <span className="text-2xl">
                       {social.emoji}
                     </span>
                   </div>
@@ -3570,7 +3540,7 @@ export default function UltraModernHome() {
             ].map((section, index) => (
               <div key={index}>
                 <h3 className="text-2xl font-black mb-10 text-purple-400 flex items-center">
-                  <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full mr-4 animate-pulse"></div>
+                  <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full mr-4"></div>
                   {section.title}
                 </h3>
                 <ul className="space-y-5">
@@ -3599,7 +3569,7 @@ export default function UltraModernHome() {
                   © 2024 SkoolVriksh Quantum Systems. All dimensions reserved.
                 </p>
                 <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full animate-pulse"></div>
+                  <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full"></div>
                   <span className="text-emerald-400 font-bold">
                     Quantum Online
                   </span>
@@ -3626,14 +3596,12 @@ export default function UltraModernHome() {
         </div>
       </footer>
 
-      {/* Quantum Floating Action Button */}
+      {/* Simplified Floating Action Button */}
       <div className="fixed bottom-10 right-10 z-50">
         <div className="relative group">
-          <div className="absolute -inset-6 bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 rounded-full blur-2xl opacity-50 group-hover:opacity-75 animate-pulse"></div>
-          <button className="relative bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 text-white p-6 rounded-full shadow-2xl hover:scale-110 transition-all duration-500 border-2 border-purple-400/30 hover:border-purple-300">
-            <FaComments className="text-3xl animate-bounce" />
+          <button className="relative bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 text-white p-6 rounded-full shadow-2xl hover:scale-105 transition-all duration-300 border-2 border-purple-400/30 hover:border-purple-300">
+            <FaComments className="text-3xl" />
           </button>
-          <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-rose-400 to-orange-400 rounded-full animate-ping"></div>
         </div>
       </div>
 

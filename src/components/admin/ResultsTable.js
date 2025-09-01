@@ -37,7 +37,7 @@ const ResultsTable = ({ results, onPublish }) => {
                   ))
                 : null}
               <td className="px-4 py-2 whitespace-nowrap">{result.totalMarks}</td>
-              <td className="px-4 py-2 whitespace-nowrap">{result.percentage.toFixed(2)}%</td>
+              <td className="px-4 py-2 whitespace-nowrap">{(result.percentage ?? 0).toFixed(2)}%</td>
               <td className="px-4 py-2 whitespace-nowrap">
                 <span
                   className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full

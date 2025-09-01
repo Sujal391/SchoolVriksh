@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }) => {
       case 'admin': return '/admin/dashboard';
       case 'teacher': return '/teacher/dashboard';
       case 'clerk': return '/clerk/dashboard';
-      case 'fee_manager': return '/fee/dashboard';
+      case 'fee_manager': return '/feesManager/dashboard';
       default: return '/dashboard';
     }
   };

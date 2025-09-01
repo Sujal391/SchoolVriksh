@@ -1337,7 +1337,7 @@ const LoginForm = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 animate-gradient-x"></div>
 
         {/* Animated Mesh Gradient Overlay - Reduced on Mobile */}
-        <div className="absolute inset-0 opacity-70">
+        {/* <div className="absolute inset-0 opacity-70">
           {!isMobile && (
             <>
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600/30 via-transparent to-cyan-600/30 animate-pulse"></div>
@@ -1347,10 +1347,10 @@ const LoginForm = () => {
               ></div>
             </>
           )}
-        </div>
+        </div> */}
 
         {/* Floating Geometric Shapes - Fewer on Mobile */}
-        {isClient && (
+        {/* {isClient && (
           <div className="absolute inset-0">
             {[...Array(isMobile ? 10 : 20)].map((_, i) => (
               <div
@@ -1369,10 +1369,10 @@ const LoginForm = () => {
               />
             ))}
           </div>
-        )}
+        )} */}
 
         {/* Dynamic Grid Pattern - Lighter on Mobile */}
-        <div className="absolute inset-0 opacity-5 md:opacity-10">
+        {/* <div className="absolute inset-0 opacity-5 md:opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern
@@ -1392,17 +1392,17 @@ const LoginForm = () => {
             </defs>
             <rect width="100%" height="100%" fill="url(#grid)" />
           </svg>
-        </div>
+        </div> */}
 
         {/* Glowing Orbs - Smaller and Fewer on Mobile */}
-        <div className="absolute top-20 left-20 w-48 h-48 md:w-96 md:h-96 bg-gradient-to-r from-cyan-400/20 to-blue-600/20 rounded-full blur-xl md:blur-3xl animate-slow-spin"></div>
+        {/* <div className="absolute top-20 left-20 w-48 h-48 md:w-96 md:h-96 bg-gradient-to-r from-cyan-400/20 to-blue-600/20 rounded-full blur-xl md:blur-3xl animate-slow-spin"></div>
         <div className="absolute bottom-20 right-20 w-40 h-40 md:w-80 md:h-80 bg-gradient-to-r from-purple-400/20 to-pink-600/20 rounded-full blur-xl md:blur-3xl animate-reverse-spin"></div>
         {!isMobile && isClient && (
           <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-gradient-to-r from-yellow-400/15 to-orange-600/15 rounded-full blur-3xl animate-bounce-slow"></div>
-        )}
+        )} */}
 
         {/* Particle System - Fewer on Mobile */}
-        {isClient && (
+        {/* {isClient && (
           <div className="absolute inset-0">
             {[...Array(isMobile ? 15 : 30)].map((_, i) => (
               <div
@@ -1417,7 +1417,7 @@ const LoginForm = () => {
               />
             ))}
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Main Content - Responsive Layout */}
@@ -1439,7 +1439,7 @@ const LoginForm = () => {
                     </div>
 
                     {/* Glowing Ring - Smaller on Mobile */}
-                    <div className="absolute inset-0 w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 border-2 border-white/30 rounded-3xl animate-spin-slow"></div>
+                    {/* <div className="absolute inset-0 w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 border-2 border-white/30 rounded-3xl animate-spin-slow"></div> */}
                   </div>
                   <div className="space-y-1 md:space-y-2">
                     <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black bg-gradient-to-r from-white via-yellow-200 to-orange-200 bg-clip-text text-transparent leading-tight animate-text-shimmer">
@@ -1497,7 +1497,7 @@ const LoginForm = () => {
                           feature.color
                         } rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg ${
                           !isMobile
-                            ? "group-hover:shadow-2xl transition-all duration-500 group-hover:rotate-12 group-hover:scale-110"
+                            ? "group-hover:shadow-2xl transition-all duration-500 group-hover: group-hover:scale-110"
                             : ""
                         }`}
                       >
@@ -1664,11 +1664,11 @@ const LoginForm = () => {
                       <div className="space-y-4 sm:space-y-6">
                         {/* Email Input with Responsive Design */}
                         <div className="relative group">
-                          <div
+                          {/* <div
                             className={`absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-xl sm:rounded-2xl blur-sm opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${
                               emailFocused ? "opacity-30" : ""
                             }`}
-                          ></div>
+                          ></div> */}
                           <div className="relative">
                             <input
                               id="email"
@@ -1676,7 +1676,7 @@ const LoginForm = () => {
                               type="email"
                               autoComplete="email"
                               required
-                              className={`w-full px-4 py-3 sm:px-6 sm:py-4 bg-gray-50/50 backdrop-blur-sm border-2 rounded-xl sm:rounded-2xl text-gray-900 placeholder-gray-500 transition-all duration-300 focus:outline-none focus:bg-white focus:shadow-lg hover:bg-gray-50 ${
+                              className={`w-full px-4 py-3 sm:px-6 sm:py-4 bg-gray-50/50 backdrop-blur-sm border-2 rounded-xl sm:rounded-2xl text-gray-900 placeholder-gray-500 transition-all duration-300 focus:outline-none focus:bg-white focus:shadow-lg ${
                                 emailFocused
                                   ? "border-cyan-400 shadow-lg shadow-cyan-400/25"
                                   : "border-gray-200"
@@ -1714,11 +1714,11 @@ const LoginForm = () => {
 
                         {/* Password Input with Responsive Design */}
                         <div className="relative group">
-                          <div
+                          {/* <div
                             className={`absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-500 rounded-xl sm:rounded-2xl blur-sm opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${
                               passwordFocused ? "opacity-30" : ""
                             }`}
-                          ></div>
+                          ></div> */}
                           <div className="relative">
                             <input
                               id="password"
@@ -1726,9 +1726,9 @@ const LoginForm = () => {
                               type="password"
                               autoComplete="current-password"
                               required
-                              className={`w-full px-4 py-3 sm:px-6 sm:py-4 bg-gray-50/50 backdrop-blur-sm border-2 rounded-xl sm:rounded-2xl text-gray-900 placeholder-gray-500 transition-all duration-300 focus:outline-none focus:bg-white focus:shadow-lg hover:bg-gray-50 ${
-                                passwordFocused
-                                  ? "border-purple-400 shadow-lg shadow-purple-400/25"
+                              className={`w-full px-4 py-3 sm:px-6 sm:py-4 bg-gray-50/50 backdrop-blur-sm border-2 rounded-xl sm:rounded-2xl text-gray-900 placeholder-gray-500 transition-all duration-300 focus:outline-none focus:bg-white focus:shadow-lg ${
+                                emailFocused
+                                  ? "border-cyan-400 shadow-lg shadow-cyan-400/25"
                                   : "border-gray-200"
                               }`}
                               placeholder="Password"
