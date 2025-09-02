@@ -82,6 +82,7 @@
 
 
 import api from "./api";
+import cookies from 'js-cookie';
 
 const AdminService = {
   // User Management
@@ -250,7 +251,7 @@ const AdminService = {
 }),
 
    getExamEvent: async (id) => {
-  const token = localStorage.getItem('token');
+  const token = cookies.get('token');
   return await api.get(`/admin/exam-event/${id}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -258,14 +259,14 @@ const AdminService = {
 
 
   getExamSchedulesForEvent: async (eventId) => {
-  const token = localStorage.getItem('token');
+  const token = cookies.get('token');
   return await api.get(`/admin/exam-event/${eventId}/schedules`, {
     headers: { Authorization: `Bearer ${token}` }
   });
 },
 
   getAvailableRooms: async () => {
-  const token = localStorage.getItem('token');
+  const token = cookies.get('token');
   return await api.get('/admin/rooms', {
     headers: { Authorization: `Bearer ${token}` }
   });

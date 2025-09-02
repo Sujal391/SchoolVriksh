@@ -5,7 +5,7 @@ const libraryService = {
   getAllBooks: async (schoolId, filters = {}) => {
     try {
       const response = await api.get('/library/all-books', {
-        params: { ...filters, schoolId }
+        params: { schoolId, ...filters, }
       });
       return response.data.books;
     } catch (error) {

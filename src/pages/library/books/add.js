@@ -63,12 +63,17 @@ const AddBook = () => {
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const { name, value } = e.target;
+
+  let newValue = name === "isbn"
+  ? value.replace(/\D/g, "").slice(0, 13)
+  : value;
+  
+  setFormData((prev) => ({
+    ...prev,
+    [name]: newValue,
+  }));
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
