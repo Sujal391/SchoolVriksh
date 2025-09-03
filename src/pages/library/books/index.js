@@ -56,7 +56,7 @@ const BookList = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-    const debouncedSearch = useDebounce(searchQuery, 500);
+    const debouncedSearch = useDebounce(searchQuery, 1500);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,7 +84,19 @@ const BookList = () => {
         ]);
 
         // Safely set the data with fallbacks
-        setBooks(booksResponse?.books || booksResponse || []);
+        let filteredBooks = booksResponse?.books || booksResponse || [];
+
+        // Apply client-side status filter if backend doesn't handle it properly
+        if (statusFilter) {
+          filteredBooks = filteredBooks.filter(book => {
+            // Determine status based on available copies if status field is not set correctly
+            const bookStatus = book.status || (book.availableCopies > 0 ? 'available' : 'unavailable');
+            return bookStatus === statusFilter;
+          });
+          console.log(`Filtered ${filteredBooks.length} books with status: ${statusFilter}`);
+        }
+
+        setBooks(filteredBooks);
         setTotalPages(booksResponse?.totalPages || 1);
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         setClasses(Array.isArray(classesData) ? classesData : []);

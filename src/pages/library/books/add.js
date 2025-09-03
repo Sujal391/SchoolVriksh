@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -11,9 +11,11 @@ import {
   Grid,
   Paper,
   CircularProgress,
-  FormHelperText
+  FormHelperText,
+  Avatar,
+  Alert
 } from '@mui/material';
-import { Save, Cancel } from '@mui/icons-material';
+import { Save, Cancel, CloudUpload, MenuBook } from '@mui/icons-material';
 import { useRouter } from 'next/router';
 import LibraryLayout from '../../../components/layout/LibraryLayout';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -27,6 +29,10 @@ const AddBook = () => {
   const [categories, setCategories] = useState([]);
   const [classes, setClasses] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     bookTitle: '',
     author: '',
@@ -68,12 +74,54 @@ const AddBook = () => {
   let newValue = name === "isbn"
   ? value.replace(/\D/g, "").slice(0, 13)
   : value;
-  
+
   setFormData((prev) => ({
     ...prev,
     [name]: newValue,
   }));
 };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      setCoverFile(null);
+      setCoverPreview(null);
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select a valid image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image file size should be less than 5MB');
+      return;
+    }
+
+    setCoverFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setCoverPreview(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const removeCoverImage = () => {
+    setCoverFile(null);
+    setCoverPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,10 +129,26 @@ const AddBook = () => {
     setError('');
 
     try {
-      await libraryService.addBook({
+      // First, create the book
+      const newBook = await libraryService.addBook({
         ...formData,
         schoolId: user.school._id
       });
+
+      // If there's a cover image, upload it
+      if (coverFile && newBook._id) {
+        try {
+          setUploadingCover(true);
+          await libraryService.uploadBookCover(newBook._id, coverFile);
+        } catch (uploadErr) {
+          console.error('Cover upload failed:', uploadErr);
+          // Don't fail the entire operation if cover upload fails
+          setError('Book created successfully, but cover upload failed. You can upload it later from the book details page.');
+        } finally {
+          setUploadingCover(false);
+        }
+      }
+
       router.push('/library/books');
     } catch (err) {
       setError(err.message);
@@ -141,7 +205,7 @@ const AddBook = () => {
             </Grid>
             
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
+              <FormControl fullWidth minWidth={150}>
                 <InputLabel>Category</InputLabel>
                 <Select
                   name="category"
@@ -244,7 +308,101 @@ const AddBook = () => {
                 rows={4}
               />
             </Grid>
-            
+
+            {/* Book Cover Upload Section */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ mt: 2, mb: 2 }}>
+                Book Cover Image
+              </Typography>
+              <Box display="flex" gap={3} alignItems="flex-start">
+                {/* Cover Preview */}
+                <Box>
+                  {coverPreview ? (
+                    <Avatar
+                      src={coverPreview}
+                      variant="rounded"
+                      sx={{
+                        width: 120,
+                        height: 160,
+                        borderRadius: 2,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                      }}
+                      alt="Book cover preview"
+                    />
+                  ) : (
+                    <Avatar
+                      variant="rounded"
+                      sx={{
+                        width: 120,
+                        height: 160,
+                        backgroundColor: 'grey.100',
+                        borderRadius: 2,
+                        border: '2px dashed',
+                        borderColor: 'grey.300',
+                        fontSize: 32,
+                        color: 'grey.400'
+                      }}
+                    >
+                      <MenuBook fontSize="inherit" />
+                    </Avatar>
+                  )}
+                </Box>
+
+                {/* Upload Controls */}
+                <Box sx={{ flex: 1 }}>
+                  <input
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    id="cover-upload"
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                  />
+
+                  <Box display="flex" gap={2} mb={2}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<CloudUpload />}
+                      onClick={handleUploadClick}
+                      disabled={uploadingCover}
+                    >
+                      {coverFile ? 'Change Cover' : 'Upload Cover'}
+                    </Button>
+
+                    {coverFile && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={removeCoverImage}
+                        disabled={uploadingCover}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </Box>
+
+                  <Typography variant="body2" color="text.secondary">
+                    Upload a book cover image (JPG, PNG, GIF). Max size: 5MB
+                  </Typography>
+
+                  {coverFile && (
+                    <Typography variant="body2" color="primary" sx={{ mt: 1 }}>
+                      Selected: {coverFile.name}
+                    </Typography>
+                  )}
+
+                  {uploadingCover && (
+                    <Box display="flex" alignItems="center" mt={1}>
+                      <CircularProgress size={16} />
+                      <Typography variant="body2" ml={1}>
+                        Uploading cover...
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+            </Grid>
+
             <Grid item xs={12}>
               <Box display="flex" justifyContent="flex-end" gap={2}>
                 <Button

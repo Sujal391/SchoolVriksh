@@ -482,8 +482,6 @@ const EditBook = () => {
                     >
                       <MenuItem value="available">Available</MenuItem>
                       <MenuItem value="unavailable">Unavailable</MenuItem>
-                      <MenuItem value="damaged">Damaged</MenuItem>
-                      <MenuItem value="lost">Lost</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
