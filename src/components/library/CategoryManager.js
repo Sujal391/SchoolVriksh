@@ -221,7 +221,9 @@ import {
   Tooltip,
   Grid,
   useMediaQuery,
-  useTheme
+  useTheme,
+  Alert,
+  Snackbar
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
@@ -236,18 +238,25 @@ const CategoryManager = () => {
   const [currentCategory, setCurrentCategory] = useState(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    if (user?.school?._id) {
+      fetchCategories();
+    }
+  }, [user?.school?._id]);
 
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const data = await libraryService.getCategories();
+      const data = await libraryService.getCategories(user?.school?._id);
       setCategories(data);
       setLoading(false);
     } catch (err) {
@@ -274,23 +283,54 @@ const CategoryManager = () => {
     try {
       if (currentCategory) {
         await libraryService.updateCategory(currentCategory._id, name, description);
+        setSnackbar({
+          open: true,
+          message: 'Category updated successfully!',
+          severity: 'success'
+        });
       } else {
         await libraryService.addCategory(name, description);
+        setSnackbar({
+          open: true,
+          message: 'Category added successfully!',
+          severity: 'success'
+        });
       }
       fetchCategories();
       handleCloseDialog();
+      setError(null); // Clear any previous errors
     } catch (err) {
       setError(err.message);
+      setSnackbar({
+        open: true,
+        message: err.message,
+        severity: 'error'
+      });
     }
   };
 
   const handleDelete = async (categoryId) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
-        await libraryService.deleteCategory(categoryId);
+        const result = await libraryService.deleteCategory(categoryId);
+        console.log('Delete result:', result); // Debug log
+
+        setSnackbar({
+          open: true,
+          message: 'Category deleted successfully!',
+          severity: 'success'
+        });
+
         fetchCategories();
+        setError(null); // Clear any previous errors
       } catch (err) {
+        console.error('Delete error:', err); // Debug log
         setError(err.message);
+        setSnackbar({
+          open: true,
+          message: err.message,
+          severity: 'error'
+        });
       }
     }
   };
@@ -443,6 +483,22 @@ const CategoryManager = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

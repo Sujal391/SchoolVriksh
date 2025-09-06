@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import api from '../services/api';
+import cookies from 'js-cookie';
 
 const AuthContext = createContext();
 
@@ -13,8 +14,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const storedToken = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
+      const storedToken = cookies.get('token');
+      const storedUser = cookies.get('user');
 
       if (storedToken && storedUser) {
         try {
@@ -36,8 +37,8 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post('/auth/login', { email, password });
       const { user, token } = response.data;
       
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      cookies.set('token', token);
+      cookies.set('user', JSON.stringify(user));
       api.setAuthToken(token);
       
       setUser(user);
@@ -54,8 +55,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    cookies.remove('token');
+    cookies.remove('user');
     api.setAuthToken(null);
     setUser(null);
     setToken(null);

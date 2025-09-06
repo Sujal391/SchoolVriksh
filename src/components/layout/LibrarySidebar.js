@@ -268,7 +268,7 @@ const LibrarySidebar = ({ open, onClose, variant, sx }) => {
       subItems: [
         { text: 'All Books', path: '/library/books' },
         { text: 'Add New Book', path: '/library/books/add' },
-        { text: 'Search Books', path: '/library/books/search' }
+        // { text: 'Search Books', path: '/library/books/search' }
       ]
     },
     { 

@@ -1,5 +1,6 @@
 // src/services/api.js
 import axios from 'axios';
+import cookies from 'js-cookie';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -13,7 +14,7 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = cookies.get('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,8 +32,8 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Handle unauthorized access
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        cookies.remove('token');
+        cookies.remove('user');
         window.location.href = '/login';
       }
     }
@@ -50,6 +51,19 @@ api.setAuthToken = (token) => {
 
 export default api;
 
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Prevent duplicate redirects if already logging out
+      if (window.location.pathname !== "/login") {
+        cookies.remove("token");
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 
 
