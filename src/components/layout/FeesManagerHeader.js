@@ -22,6 +22,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import SchoolIcon from "@mui/icons-material/School";
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import cookie from 'js-cookie';
 
 const FeesManagerHeader = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
@@ -40,6 +41,8 @@ const FeesManagerHeader = ({ onMenuClick }) => {
   };
 
   const handleLogout = () => {
+    setUser(null);
+    cookie.remove('token');
     handleMenuClose();
     logout();
   };

@@ -379,9 +379,12 @@ const libraryService = {
 
   deleteCategory: async (categoryId) => {
     try {
+      console.log('Deleting category with ID:', categoryId);
       const response = await api.delete(`/library/categories/${categoryId}`);
+      console.log('Delete response:', response);
       return response.data;
     } catch (error) {
+      console.error('Delete category error:', error);
       throw new Error(error.response?.data?.error || 'Failed to delete category');
     }
   },

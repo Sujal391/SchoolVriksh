@@ -51,6 +51,19 @@ api.setAuthToken = (token) => {
 
 export default api;
 
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Prevent duplicate redirects if already logging out
+      if (window.location.pathname !== "/login") {
+        cookies.remove("token");
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 
 

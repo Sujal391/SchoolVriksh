@@ -373,49 +373,59 @@ const IssueRequests = () => {
     setDirectIssueDialogOpen(true);
   };
 
-  const handleReject = (request) => {
-    setSelectedRequest(request);
-    setRemarks('');
-    setRejectDialogOpen(true);
-  };
-
-
-
-
-
-
-
   const confirmReject = async () => {
-    if (!selectedRequest) return;
+  if (!selectedRequest) return;
 
-    try {
-      setProcessing(true);
-      
-      await libraryService.rejectRequest(selectedRequest._id, remarks);
-      
-      setRejectDialogOpen(false);
+  try {
+    setProcessing(true);
+
+    await libraryService.rejectRequest(selectedRequest._id, remarks);
+
+    setRejectDialogOpen(false);
+    setSnackbar({
+      open: true,
+      message: 'Request rejected successfully!',
+      severity: 'success'
+    });
+
+    // Reset form
+    resetForm();
+
+    // Refresh the requests list
+    await fetchRequests();
+
+  } catch (err) {
+    const errorMessage = err.message || 'Failed to reject request';
+
+    if (errorMessage.includes('sendEmail is not a function')) {
+      // Show warning but continue since rejection was successful
       setSnackbar({
         open: true,
-        message: 'Request rejected successfully!',
-        severity: 'success'
+        message: 'Request rejected successfully (email notification failed)',
+        severity: 'warning'
       });
-      
-      // Reset form
-      resetForm();
-      
-      // Refresh the requests list
-      await fetchRequests();
-      
-    } catch (err) {
+
+      try {
+        // Reset form and refresh requests anyway
+        resetForm();
+        await fetchRequests();
+      } catch (refreshErr) {
+        console.error('Failed to refresh requests:', refreshErr);
+      }
+
+      setRejectDialogOpen(false);
+    } else {
       setSnackbar({
         open: true,
-        message: err.message,
+        message: errorMessage,
         severity: 'error'
       });
-    } finally {
-      setProcessing(false);
     }
-  };
+  } finally {
+    setProcessing(false);
+  }
+};
+
 
   const confirmDirectIssue = async () => {
     if (!selectedBook || !dueDate || !grNumber.trim()) return;
@@ -550,6 +560,20 @@ const IssueRequests = () => {
         </Typography>
         <Box display="flex" gap={2}>
           <Button
+            variant="contained"
+            startIcon={<BadgeIcon />}
+            onClick={() => setDirectIssueDialogOpen(true)}
+            color="primary"
+            sx={{
+              backgroundColor: 'primary.main',
+              '&:hover': {
+                backgroundColor: 'primary.dark'
+              }
+            }}
+          >
+            Issue by GR Number
+          </Button>
+          <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
             onClick={fetchRequests}
@@ -571,21 +595,21 @@ const IssueRequests = () => {
           <Table stickyHeader>
             <TableHead>
               <TableRow sx={{ backgroundColor: 'primary.main' }}>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 200 }}>
+                <TableCell sx={{ color: 'black', fontWeight: 'bold', minWidth: 200 }}>
                   <Box display="flex" alignItems="center" gap={1}>
                     <BookIcon fontSize="small" />
                     Book Details
                   </Box>
                 </TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 180 }}>
+                <TableCell sx={{ color: 'black', fontWeight: 'bold', minWidth: 180 }}>
                   <Box display="flex" alignItems="center" gap={1}>
                     <PersonIcon fontSize="small" />
                     Student Details
                   </Box>
                 </TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 120 }}>Request Date</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 100 }}>Status</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 200 }}>Actions</TableCell>
+                <TableCell sx={{ color: 'black', fontWeight: 'bold', minWidth: 120 }}>Request Date</TableCell>
+                <TableCell sx={{ color: 'black', fontWeight: 'bold', minWidth: 100 }}>Status</TableCell>
+                <TableCell sx={{ color: 'black', fontWeight: 'bold', minWidth: 200 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -680,24 +704,6 @@ const IssueRequests = () => {
                                 sx={{ mb: 0.5 }}
                               >
                                 <ApproveIcon />
-                              </IconButton>
-                            </Tooltip>
-
-                            <Tooltip title="Issue by GR Number">
-                              <IconButton
-                                onClick={() => handleDirectIssue(request.book)}
-                                color="primary"
-                                size="small"
-                                sx={{
-                                  mb: 0.5,
-                                  backgroundColor: 'primary.light',
-                                  '&:hover': {
-                                    backgroundColor: 'primary.main',
-                                    color: 'white'
-                                  }
-                                }}
-                              >
-                                <BadgeIcon />
                               </IconButton>
                             </Tooltip>
 
