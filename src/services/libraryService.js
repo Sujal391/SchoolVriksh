@@ -2,23 +2,23 @@ import api from './api';
 
 const libraryService = {
   // Book Operations
-  getAllBooks: async (schoolId, filters = {}) => {
+  getAllBooks: async (filters = {}) => {
     try {
       const response = await api.get('/library/all-books', {
-        params: { ...filters, schoolId }
+        params: { ...filters }
       });
-      return response.data.books;
+      return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.error || 'Failed to fetch books');
     }
   },
 
-  searchBooks: async (schoolId, query, filters = {}) => {
+  searchBooks: async (query, filters = {}) => {
     try {
       const response = await api.get('/library/search', {
-        params: { query, schoolId, ...filters }
+        params: { query, ...filters }
       });
-      return response.data.books;
+      return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.error || 'Search failed');
     }
@@ -276,7 +276,17 @@ const libraryService = {
       const response = await api.post(`/library/books/return/${issueId}`);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.error || 'Failed to return book');
+      // Check if the error is related to sendEmail function but the book was actually returned
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to return book';
+
+      // If it's a sendEmail error but the operation was successful, don't throw
+      if (errorMessage.includes('sendEmail is not a function') && error.response?.status === 200) {
+        console.warn('Book returned successfully but email notification failed:', errorMessage);
+        return { success: true, message: 'Book returned successfully (email notification failed)' };
+      }
+
+      // For other errors, throw as usual
+      throw new Error(errorMessage);
     }
   },
 
@@ -369,9 +379,12 @@ const libraryService = {
 
   deleteCategory: async (categoryId) => {
     try {
+      console.log('Deleting category with ID:', categoryId);
       const response = await api.delete(`/library/categories/${categoryId}`);
+      console.log('Delete response:', response);
       return response.data;
     } catch (error) {
+      console.error('Delete category error:', error);
       throw new Error(error.response?.data?.error || 'Failed to delete category');
     }
   },

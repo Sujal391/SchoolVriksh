@@ -21,7 +21,7 @@ import {
   Receipt as ReceiptsIcon,
   Payment as PaymentsIcon,
   People as StudentsIcon,
-  Assessment as ReportsIcon,
+  // Assessment as ReportsIcon,
   ChevronLeft as ChevronLeftIcon,
   ExpandLess,
   ExpandMore,
@@ -74,26 +74,22 @@ const FeesManagerSidebar = ({ open, onClose, variant, sx }) => {
     { 
       text: 'Payments', 
       icon: <PaymentsIcon />, 
-      path: '/feesManager/payments',
-      subItems: [
-        { text: 'All Payments', path: '/feesManager/payments' },
-        { text: 'Pending Verification', path: '/feesManager/payments/pending' }
-      ]
+      path: '/feesManager/payments'
     },
     { 
       text: 'Receipts', 
       icon: <ReceiptsIcon />, 
       path: '/feesManager/receipts'
     },
-    { 
-      text: 'Reports', 
-      icon: <ReportsIcon />, 
-      path: '/feesManager/reports',
-      subItems: [
-        { text: 'Monthly Report', path: '/feesManager/reports/monthly' },
-        { text: 'Annual Report', path: '/feesManager/reports/annual' }
-      ]
-    }
+    // { 
+    //   text: 'Reports', 
+    //   icon: <ReportsIcon />, 
+    //   path: '/feesManager/reports',
+    //   subItems: [
+    //     { text: 'Monthly Report', path: '/feesManager/reports/monthly' },
+    //     { text: 'Annual Report', path: '/feesManager/reports/annual' }
+    //   ]
+    // }
   ];
 
   const handleItemClick = (path, hasSubItems = false) => {

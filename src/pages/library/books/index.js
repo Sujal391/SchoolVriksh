@@ -30,11 +30,12 @@ import {
   Stack,
   Container,
 } from '@mui/material';
-import { Add, Search, Edit, Delete, Visibility, ImportExport, FilterList } from '@mui/icons-material';
+import { Add, Search, Edit, Delete, Visibility, ImportExport, FilterList, Close as CloseIcon } from '@mui/icons-material';
 import { useRouter } from 'next/router';
 import LibraryLayout from '../../../components/layout/LibraryLayout';
 import { useAuth } from '../../../contexts/AuthContext';
 import libraryService from '../../../services/libraryService';
+import useDebounce from '../../../hooks/useDebounce';
 
 const BookList = () => {
   const { user } = useAuth();
@@ -55,13 +56,15 @@ const BookList = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+    const debouncedSearch = useDebounce(searchQuery, 1500);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
         const filters = {
-          query: searchQuery,
+          query: debouncedSearch,
           category: categoryFilter,
           classId: classFilter,
           status: statusFilter,
@@ -70,8 +73,8 @@ const BookList = () => {
         };
 
         // Fetch books data using search or getAllBooks based on query
-        const booksResponse = searchQuery
-          ? await libraryService.searchBooks(searchQuery, filters)
+        const booksResponse = debouncedSearch
+          ? await libraryService.searchBooks(debouncedSearch, filters)
           : await libraryService.getAllBooks(filters);
 
         // Fetch categories and classes in parallel
@@ -81,7 +84,19 @@ const BookList = () => {
         ]);
 
         // Safely set the data with fallbacks
-        setBooks(booksResponse?.books || booksResponse || []);
+        let filteredBooks = booksResponse?.books || booksResponse || [];
+
+        // Apply client-side status filter if backend doesn't handle it properly
+        if (statusFilter) {
+          filteredBooks = filteredBooks.filter(book => {
+            // Determine status based on available copies if status field is not set correctly
+            const bookStatus = book.status || (book.availableCopies > 0 ? 'available' : 'unavailable');
+            return bookStatus === statusFilter;
+          });
+          console.log(`Filtered ${filteredBooks.length} books with status: ${statusFilter}`);
+        }
+
+        setBooks(filteredBooks);
         setTotalPages(booksResponse?.totalPages || 1);
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         setClasses(Array.isArray(classesData) ? classesData : []);
@@ -100,7 +115,7 @@ const BookList = () => {
     if (user?.school?._id) {
       fetchData();
     }
-  }, [searchQuery, categoryFilter, classFilter, statusFilter, page, user?.school?._id]);
+  }, [debouncedSearch, categoryFilter, classFilter, statusFilter, page, user?.school?._id]);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -136,6 +151,14 @@ const BookList = () => {
       }
     }
   };
+
+  // Auto-remove error after 10s
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, setError]);
 
   // Mobile Card View Component
   const BookCard = ({ book }) => (
@@ -370,12 +393,22 @@ const BookList = () => {
                 mb: 3, 
                 backgroundColor: theme.palette.error.light + '10',
                 border: `1px solid ${theme.palette.error.light}`,
-                borderRadius: 2
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
               <Typography color="error" variant="body1" sx={{ fontWeight: 500 }}>
                 {error}
               </Typography>
+              <IconButton
+                size="small"
+                onClick={() => setError(null)}
+                aria-label="close"
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
             </Paper>
           </Fade>
         )}
@@ -398,7 +431,7 @@ const BookList = () => {
           </Box>
           
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} md={6}>
               <TextField
                 label="Search Books"
                 variant="outlined"
@@ -424,11 +457,11 @@ const BookList = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl size="small" fullWidth>
+            <Grid item xs={12} md={6}>
+              <FormControl size="small" fullWidth sx={{ minWidth: 110 }}>
                 <InputLabel>Category</InputLabel>
                 <Select 
-                  value={categoryFilter} 
+                  value={categoryFilter}
                   onChange={handleCategoryChange} 
                   label="Category"
                   sx={{
@@ -448,8 +481,8 @@ const BookList = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl size="small" fullWidth>
+            <Grid item xs={12} md={6}>
+              <FormControl size="small" fullWidth sx={{ minWidth: 110 }}>
                 <InputLabel>Class</InputLabel>
                 <Select 
                   value={classFilter} 
@@ -472,8 +505,8 @@ const BookList = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl size="small" fullWidth>
+            <Grid item xs={12} md={6}>
+              <FormControl size="small" fullWidth sx={{ minWidth: 110 }}>
                 <InputLabel>Status</InputLabel>
                 <Select 
                   value={statusFilter} 

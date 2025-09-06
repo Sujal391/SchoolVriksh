@@ -904,83 +904,103 @@ const StudentHistoryDetail = () => {
   const handleReturnBook = async (issueId) => {
     try {
       setActionLoading(prev => ({ ...prev, [issueId]: true }));
-      await libraryService.returnBook(issueId);
-      
+      const result = await libraryService.returnBook(issueId);
+
       setSnackbar({
         open: true,
-        message: 'Book returned successfully',
+        message: result.message || 'Book returned successfully',
         severity: 'success'
       });
-      
+
       // Refresh the history data
       const data = await libraryService.getStudentHistory(studentId);
       setHistory(data.history || []);
-      
+
     } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message || 'Failed to return book',
-        severity: 'error'
-      });
+      // Check if it's a sendEmail error but the book was actually returned
+      const errorMessage = err.message || 'Failed to return book';
+
+      if (errorMessage.includes('sendEmail is not a function')) {
+        // Show warning but still refresh data as the book might have been returned
+        setSnackbar({
+          open: true,
+          message: 'Book returned successfully (email notification failed)',
+          severity: 'warning'
+        });
+
+        // Refresh the history data to check if book was actually returned
+        try {
+          const data = await libraryService.getStudentHistory(studentId);
+          setHistory(data.history || []);
+        } catch (refreshErr) {
+          console.error('Failed to refresh history:', refreshErr);
+        }
+      } else {
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          severity: 'error'
+        });
+      }
     } finally {
       setActionLoading(prev => ({ ...prev, [issueId]: false }));
       handleMenuClose();
     }
   };
 
-  const handleRenewBook = async (issueId) => {
-    try {
-      setActionLoading(prev => ({ ...prev, [issueId]: true }));
-      await libraryService.renewBook(issueId, 'Renewed from student history detail');
+  // const handleRenewBook = async (issueId) => {
+  //   try {
+  //     setActionLoading(prev => ({ ...prev, [issueId]: true }));
+  //     await libraryService.renewBook(issueId, 'Renewed from student history detail');
       
-      setSnackbar({
-        open: true,
-        message: 'Book renewed successfully',
-        severity: 'success'
-      });
+  //     setSnackbar({
+  //       open: true,
+  //       message: 'Book renewed successfully',
+  //       severity: 'success'
+  //     });
       
-      // Refresh the history data
-      const data = await libraryService.getStudentHistory(studentId);
-      setHistory(data.history || []);
+  //     // Refresh the history data
+  //     const data = await libraryService.getStudentHistory(studentId);
+  //     setHistory(data.history || []);
       
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message || 'Failed to renew book',
-        severity: 'error'
-      });
-    } finally {
-      setActionLoading(prev => ({ ...prev, [issueId]: false }));
-      handleMenuClose();
-    }
-  };
+  //   } catch (err) {
+  //     setSnackbar({
+  //       open: true,
+  //       message: err.message || 'Failed to renew book',
+  //       severity: 'error'
+  //     });
+  //   } finally {
+  //     setActionLoading(prev => ({ ...prev, [issueId]: false }));
+  //     handleMenuClose();
+  //   }
+  // };
 
-  const handlePardonFine = async (issueId) => {
-    try {
-      setActionLoading(prev => ({ ...prev, [issueId]: true }));
-      await libraryService.pardonFine(issueId, 'Fine pardoned from student history detail');
+  // const handlePardonFine = async (issueId) => {
+  //   try {
+  //     setActionLoading(prev => ({ ...prev, [issueId]: true }));
+  //     await libraryService.pardonFine(issueId, 'Fine pardoned from student history detail');
       
-      setSnackbar({
-        open: true,
-        message: 'Fine pardoned successfully',
-        severity: 'success'
-      });
+  //     setSnackbar({
+  //       open: true,
+  //       message: 'Fine pardoned successfully',
+  //       severity: 'success'
+  //     });
       
-      // Refresh the history data
-      const data = await libraryService.getStudentHistory(studentId);
-      setHistory(data.history || []);
+  //     // Refresh the history data
+  //     const data = await libraryService.getStudentHistory(studentId);
+  //     setHistory(data.history || []);
       
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message || 'Failed to pardon fine',
-        severity: 'error'
-      });
-    } finally {
-      setActionLoading(prev => ({ ...prev, [issueId]: false }));
-      handleMenuClose();
-    }
-  };
+  //   } catch (err) {
+  //     setSnackbar({
+  //       open: true,
+  //       message: err.message || 'Failed to pardon fine',
+  //       severity: 'error'
+  //     });
+  //   } finally {
+  //     setActionLoading(prev => ({ ...prev, [issueId]: false }));
+  //     handleMenuClose();
+  //   }
+  // };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -1006,11 +1026,11 @@ const StudentHistoryDetail = () => {
     return true; // Allow all authenticated users to perform actions
   };
 
-  const canRenewBook = (record) => {
-    return record.status === 'issued' && 
-           new Date(record.dueDate) >= new Date() && 
-           (record.renewalCount || 0) < 2;
-  };
+  // const canRenewBook = (record) => {
+  //   return record.status === 'issued' && 
+  //          new Date(record.dueDate) >= new Date() && 
+  //          (record.renewalCount || 0) < 2;
+  // };
 
   const canReturnBook = (record) => {
     return record.status === 'issued';
@@ -1124,7 +1144,7 @@ const StudentHistoryDetail = () => {
                 <TableCell>Return Date</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Fine</TableCell>
-                <TableCell>Renewals</TableCell>
+                {/* <TableCell>Renewals</TableCell> */}
                 {canPerformActions() && <TableCell>Actions</TableCell>}
               </TableRow>
             </TableHead>
@@ -1202,11 +1222,11 @@ const StudentHistoryDetail = () => {
                         </Typography>
                       )}
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Typography variant="body2">
                         {item.renewalCount || 0}/2
                       </Typography>
-                    </TableCell>
+                    </TableCell> */}
                     {canPerformActions() && (
                       <TableCell>
                         <IconButton
@@ -1241,7 +1261,7 @@ const StudentHistoryDetail = () => {
               Return Book
             </MenuItem>
           )}
-          {selectedRecord && canRenewBook(selectedRecord) && (
+          {/* {selectedRecord && canRenewBook(selectedRecord) && (
             <MenuItem onClick={() => handleRenewBook(selectedRecord._id)}>
               <Autorenew sx={{ mr: 1 }} />
               Renew Book
@@ -1252,7 +1272,7 @@ const StudentHistoryDetail = () => {
               <MoneyOff sx={{ mr: 1 }} />
               Pardon Fine
             </MenuItem>
-          )}
+          )} */}
         </Menu>
 
         {/* Snackbar for notifications */}

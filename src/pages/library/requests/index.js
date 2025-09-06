@@ -1,35 +1,4 @@
-// import { useState, useEffect } from 'react';
-// import {
-//   Box,
-//   Typography,
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableContainer,
-//   TableHead,
-//   TableRow,
-//   Paper,
-//   Chip,
-//   Button,
-//   Dialog,
-//   DialogTitle,
-//   DialogContent,
-//   DialogActions,
-//   TextField,
-//   CircularProgress,
-//   Tooltip,
-//   IconButton
-// } from '@mui/material';
-// import {
-//   Check as ApproveIcon,
-//   Close as RejectIcon,
-//   Visibility as ViewIcon,
-//   Refresh as RefreshIcon
-// } from '@mui/icons-material';
-// import { useRouter } from 'next/router';
-// import LibraryLayout from '../../../components/layout/LibraryLayout';
-// import { useAuth } from '../../../contexts/AuthContext';
-// import libraryService from '../../../services/libraryService';
+
 
 // const IssueRequests = () => {
 //   const { user } = useAuth();
@@ -315,12 +284,7 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  FormLabel,
-  Divider
+  MenuItem
 } from '@mui/material';
 import {
   Check as ApproveIcon,
@@ -351,12 +315,11 @@ const IssueRequests = () => {
   const [finePerDay, setFinePerDay] = useState(5);
   const [processing, setProcessing] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  
-  // New states for GR number functionality
-  const [issueMethod, setIssueMethod] = useState('request'); // 'request' or 'direct'
-  const [grNumber, setGrNumber] = useState('');
+
+  // States for GR number functionality
   const [directIssueDialogOpen, setDirectIssueDialogOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [grNumber, setGrNumber] = useState('');
   const [bookSearchQuery, setBookSearchQuery] = useState('');
   const [searchedBooks, setSearchedBooks] = useState([]);
   const [bookSearchLoading, setBookSearchLoading] = useState(false);
@@ -385,93 +348,115 @@ const IssueRequests = () => {
 
   const handleApprove = (request) => {
     setSelectedRequest(request);
-    setIssueMethod('request');
-    
+
     // Set default due date based on loan period
     const defaultDueDate = new Date();
     defaultDueDate.setDate(defaultDueDate.getDate() + loanPeriodDays);
     setDueDate(defaultDueDate.toISOString().split('T')[0]);
-    
+
     setRemarks('');
-    setGrNumber('');
     setApproveDialogOpen(true);
   };
 
   const handleDirectIssue = (book = null) => {
     setSelectedBook(book);
-    setIssueMethod('direct');
-    
+
     // Set default due date based on loan period
     const defaultDueDate = new Date();
     defaultDueDate.setDate(defaultDueDate.getDate() + loanPeriodDays);
     setDueDate(defaultDueDate.toISOString().split('T')[0]);
-    
+
     setRemarks('');
     setGrNumber('');
+    setBookSearchQuery(book?.bookTitle || '');
+    setSearchedBooks([]);
     setDirectIssueDialogOpen(true);
   };
 
-  const handleReject = (request) => {
-    setSelectedRequest(request);
-    setRemarks('');
-    setRejectDialogOpen(true);
-  };
+  const confirmReject = async () => {
+  if (!selectedRequest) return;
 
-  const confirmApprove = async () => {
-    if (!selectedRequest || !dueDate) return;
+  try {
+    setProcessing(true);
+
+    await libraryService.rejectRequest(selectedRequest._id, remarks);
+
+    setRejectDialogOpen(false);
+    setSnackbar({
+      open: true,
+      message: 'Request rejected successfully!',
+      severity: 'success'
+    });
+
+    // Reset form
+    resetForm();
+
+    // Refresh the requests list
+    await fetchRequests();
+
+  } catch (err) {
+    const errorMessage = err.message || 'Failed to reject request';
+
+    if (errorMessage.includes('sendEmail is not a function')) {
+      // Show warning but continue since rejection was successful
+      setSnackbar({
+        open: true,
+        message: 'Request rejected successfully (email notification failed)',
+        severity: 'warning'
+      });
+
+      try {
+        // Reset form and refresh requests anyway
+        resetForm();
+        await fetchRequests();
+      } catch (refreshErr) {
+        console.error('Failed to refresh requests:', refreshErr);
+      }
+
+      setRejectDialogOpen(false);
+    } else {
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error'
+      });
+    }
+  } finally {
+    setProcessing(false);
+  }
+};
+
+
+  const confirmDirectIssue = async () => {
+    if (!selectedBook || !dueDate || !grNumber.trim()) return;
 
     try {
       setProcessing(true);
-      
-      if (issueMethod === 'request') {
-        // Issue based on existing request
-        await libraryService.issueBook(
-          selectedRequest.book._id,
-          selectedRequest.user._id,
-          {
-            dueDate,
-            requestId: selectedRequest._id,
-            loanPeriodDays: parseInt(loanPeriodDays),
-            finePerDay: parseFloat(finePerDay),
-            remarks: remarks || undefined
-          }
-        );
-      } else if (issueMethod === 'direct') {
-        // Direct issue by GR number
-        if (!grNumber.trim()) {
-          setSnackbar({
-            open: true,
-            message: 'Please enter a valid GR number',
-            severity: 'error'
-          });
-          return;
-        }
 
-        await libraryService.issueBookByGrNumber(
-          selectedRequest.book._id,
-          grNumber.trim(),
-          {
-            dueDate,
-            loanPeriodDays: parseInt(loanPeriodDays),
-            finePerDay: parseFloat(finePerDay),
-            remarks: remarks || undefined
-          }
-        );
-      }
-      
-      setApproveDialogOpen(false);
+      await libraryService.issueBookByGrNumber(
+        selectedBook._id,
+        grNumber.trim(),
+        {
+          dueDate,
+          loanPeriodDays: parseInt(loanPeriodDays),
+          finePerDay: parseFloat(finePerDay),
+          remarks: remarks || 'Direct issue by GR number'
+        }
+      );
+
+      setDirectIssueDialogOpen(false);
       setSnackbar({
         open: true,
         message: 'Book issued successfully!',
         severity: 'success'
       });
-      
+
       // Reset form
       resetForm();
-      
+
       // Refresh the requests list
       await fetchRequests();
-      
+
     } catch (err) {
       setSnackbar({
         open: true,
@@ -491,8 +476,8 @@ const IssueRequests = () => {
 
     try {
       setBookSearchLoading(true);
-      const books = await libraryService.searchBooks(query);
-      setSearchedBooks(books);
+      const response = await libraryService.searchBooks(query);
+      setSearchedBooks(response.books || response || []);
     } catch (err) {
       console.error('Error searching books:', err);
       setSearchedBooks([]);
@@ -512,79 +497,6 @@ const IssueRequests = () => {
     setSearchedBooks([]);
   };
 
-  const confirmDirectIssue = async () => {
-    if (!selectedBook || !dueDate || !grNumber.trim()) return;
-
-    try {
-      setProcessing(true);
-      
-      await libraryService.issueBookByGrNumber(
-        selectedBook._id,
-        grNumber.trim(),
-        {
-          dueDate,
-          loanPeriodDays: parseInt(loanPeriodDays),
-          finePerDay: parseFloat(finePerDay),
-          remarks: remarks || undefined
-        }
-      );
-      
-      setDirectIssueDialogOpen(false);
-      setSnackbar({
-        open: true,
-        message: 'Book issued successfully!',
-        severity: 'success'
-      });
-      
-      // Reset form
-      resetForm();
-      
-      // Refresh the requests list
-      await fetchRequests();
-      
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message,
-        severity: 'error'
-      });
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const confirmReject = async () => {
-    if (!selectedRequest) return;
-
-    try {
-      setProcessing(true);
-      
-      await libraryService.rejectRequest(selectedRequest._id, remarks);
-      
-      setRejectDialogOpen(false);
-      setSnackbar({
-        open: true,
-        message: 'Request rejected successfully!',
-        severity: 'success'
-      });
-      
-      // Reset form
-      resetForm();
-      
-      // Refresh the requests list
-      await fetchRequests();
-      
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message,
-        severity: 'error'
-      });
-    } finally {
-      setProcessing(false);
-    }
-  };
-
   const resetForm = () => {
     setSelectedRequest(null);
     setSelectedBook(null);
@@ -592,7 +504,6 @@ const IssueRequests = () => {
     setRemarks('');
     setLoanPeriodDays(14);
     setFinePerDay(5);
-    setIssueMethod('request');
     setGrNumber('');
     setBookSearchQuery('');
     setSearchedBooks([]);
@@ -684,21 +595,21 @@ const IssueRequests = () => {
           <Table stickyHeader>
             <TableHead>
               <TableRow sx={{ backgroundColor: 'primary.main' }}>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 200 }}>
+                <TableCell sx={{ color: 'black', fontWeight: 'bold', minWidth: 200 }}>
                   <Box display="flex" alignItems="center" gap={1}>
                     <BookIcon fontSize="small" />
                     Book Details
                   </Box>
                 </TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 180 }}>
+                <TableCell sx={{ color: 'black', fontWeight: 'bold', minWidth: 180 }}>
                   <Box display="flex" alignItems="center" gap={1}>
                     <PersonIcon fontSize="small" />
                     Student Details
                   </Box>
                 </TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 120 }}>Request Date</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 100 }}>Status</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 200 }}>Actions</TableCell>
+                <TableCell sx={{ color: 'black', fontWeight: 'bold', minWidth: 120 }}>Request Date</TableCell>
+                <TableCell sx={{ color: 'black', fontWeight: 'bold', minWidth: 100 }}>Status</TableCell>
+                <TableCell sx={{ color: 'black', fontWeight: 'bold', minWidth: 200 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -795,25 +706,7 @@ const IssueRequests = () => {
                                 <ApproveIcon />
                               </IconButton>
                             </Tooltip>
-                            
-                            <Tooltip title="Issue by GR Number">
-                              <IconButton 
-                                onClick={() => handleDirectIssue(request.book)}
-                                color="primary"
-                                size="small"
-                                sx={{ 
-                                  mb: 0.5,
-                                  backgroundColor: 'primary.light',
-                                  '&:hover': {
-                                    backgroundColor: 'primary.main',
-                                    color: 'white'
-                                  }
-                                }}
-                              >
-                                <BadgeIcon />
-                              </IconButton>
-                            </Tooltip>
-                            
+
                             <Tooltip title="Reject Request">
                               <IconButton 
                                 onClick={() => handleReject(request)}
@@ -859,44 +752,7 @@ const IssueRequests = () => {
             </Typography>
           </Box>
 
-          <FormControl component="fieldset" sx={{ mb: 3 }}>
-            <FormLabel component="legend">Issue Method</FormLabel>
-            <RadioGroup
-              value={issueMethod}
-              onChange={(e) => setIssueMethod(e.target.value)}
-              row
-            >
-              <FormControlLabel 
-                value="request" 
-                control={<Radio />} 
-                label="Process Request" 
-              />
-              <FormControlLabel 
-                value="direct" 
-                control={<Radio />} 
-                label="Direct Issue by GR" 
-              />
-            </RadioGroup>
-          </FormControl>
 
-          {issueMethod === 'direct' && (
-            <Box mb={3}>
-              <Divider sx={{ mb: 2 }} />
-              <TextField
-                fullWidth
-                label="Student GR Number"
-                value={grNumber}
-                onChange={(e) => setGrNumber(e.target.value)}
-                placeholder="Enter student's GR number"
-                required
-                sx={{ mb: 2 }}
-              />
-              <Alert severity="info" sx={{ mb: 2 }}>
-                This will issue the book directly to the student with the provided GR number, 
-                regardless of the original request.
-              </Alert>
-            </Box>
-          )}
 
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
@@ -955,11 +811,48 @@ const IssueRequests = () => {
           <Button onClick={() => setApproveDialogOpen(false)}>
             Cancel
           </Button>
-          <Button 
-            onClick={confirmApprove}
+          <Button
+            onClick={async () => {
+              if (!selectedRequest || !dueDate) return;
+
+              try {
+                setProcessing(true);
+
+                await libraryService.issueBook(
+                  selectedRequest.book._id,
+                  selectedRequest.user._id,
+                  {
+                    dueDate,
+                    requestId: selectedRequest._id,
+                    loanPeriodDays: parseInt(loanPeriodDays),
+                    finePerDay: parseFloat(finePerDay),
+                    remarks: remarks || 'Approved via dialog'
+                  }
+                );
+
+                setApproveDialogOpen(false);
+                setSnackbar({
+                  open: true,
+                  message: 'Book issued successfully!',
+                  severity: 'success'
+                });
+
+                resetForm();
+                await fetchRequests();
+
+              } catch (err) {
+                setSnackbar({
+                  open: true,
+                  message: err.message,
+                  severity: 'error'
+                });
+              } finally {
+                setProcessing(false);
+              }
+            }}
             color="primary"
             variant="contained"
-            disabled={processing || !dueDate || (issueMethod === 'direct' && !grNumber.trim())}
+            disabled={processing || !dueDate}
             startIcon={processing ? <CircularProgress size={20} /> : <ApproveIcon />}
           >
             {processing ? 'Processing...' : 'Issue Book'}

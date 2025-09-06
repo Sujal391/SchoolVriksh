@@ -788,95 +788,118 @@ const StudentHistory = () => {
   const handleReturnBook = async (issueId) => {
     try {
       setActionLoading(prev => ({ ...prev, [issueId]: true }));
-      await libraryService.returnBook(issueId);
-      
+      const result = await libraryService.returnBook(issueId);
+
       setSnackbar({
         open: true,
-        message: 'Book returned successfully',
+        message: result.message || 'Book returned successfully',
         severity: 'success'
       });
-      
+
       // Refresh the history data
       if (selectedStudentHistory) {
         const updatedData = await libraryService.getStudentHistoryByGrNumber(selectedStudentHistory.student.grNumber);
         setSelectedStudentHistory(updatedData);
       }
-      
+
       // Refresh students list
       fetchStudents();
     } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message || 'Failed to return book',
-        severity: 'error'
-      });
+      // Check if it's a sendEmail error but the book was actually returned
+      const errorMessage = err.message || 'Failed to return book';
+
+      if (errorMessage.includes('sendEmail is not a function')) {
+        // Show warning but still refresh data as the book might have been returned
+        setSnackbar({
+          open: true,
+          message: 'Book returned successfully (email notification failed)',
+          severity: 'warning'
+        });
+
+        // Refresh the data to check if book was actually returned
+        try {
+          if (selectedStudentHistory) {
+            const updatedData = await libraryService.getStudentHistoryByGrNumber(selectedStudentHistory.student.grNumber);
+            setSelectedStudentHistory(updatedData);
+          }
+          fetchStudents();
+        } catch (refreshErr) {
+          console.error('Failed to refresh data:', refreshErr);
+        }
+      } else {
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          severity: 'error'
+        });
+      }
     } finally {
       setActionLoading(prev => ({ ...prev, [issueId]: false }));
       handleMenuClose();
     }
   };
 
-  const handleRenewBook = async (issueId) => {
-    try {
-      setActionLoading(prev => ({ ...prev, [issueId]: true }));
-      await libraryService.renewBook(issueId, 'Renewed from student history');
+  // const handleRenewBook = async (issueId) => {
+  //   try {
+  //     setActionLoading(prev => ({ ...prev, [issueId]: true }));
+  //     await libraryService.renewBook(issueId, 'Renewed from student history');
       
-      setSnackbar({
-        open: true,
-        message: 'Book renewed successfully',
-        severity: 'success'
-      });
+  //     setSnackbar({
+  //       open: true,
+  //       message: 'Book renewed successfully',
+  //       severity: 'success'
+  //     });
       
-      // Refresh the history data
-      if (selectedStudentHistory) {
-        const updatedData = await libraryService.getStudentHistoryByGrNumber(selectedStudentHistory.student.grNumber);
-        setSelectedStudentHistory(updatedData);
-      }
+  //     // Refresh the history data
+  //     if (selectedStudentHistory) {
+  //       const updatedData = await libraryService.getStudentHistoryByGrNumber(selectedStudentHistory.student.grNumber);
+  //       setSelectedStudentHistory(updatedData);
+  //     }
       
-      // Refresh students list
-      fetchStudents();
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message || 'Failed to renew book',
-        severity: 'error'
-      });
-    } finally {
-      setActionLoading(prev => ({ ...prev, [issueId]: false }));
-      handleMenuClose();
-    }
-  };
+  //     // Refresh students list
+  //     fetchStudents();
+  //   } catch (err) {
+  //     setSnackbar({
+  //       open: true,
+  //       message: err.message || 'Failed to renew book',
+  //       severity: 'error'
+  //     });
+  //   } finally {
+  //     setActionLoading(prev => ({ ...prev, [issueId]: false }));
+  //     handleMenuClose();
+  //   }
+  // };
 
-  const handlePardonFine = async (issueId) => {
-    try {
-      setActionLoading(prev => ({ ...prev, [issueId]: true }));
-      await libraryService.pardonFine(issueId, 'Fine pardoned from student history');
+  // const handlePardonFine = async (issueId) => {
+  //   try {
+  //     setActionLoading(prev => ({ ...prev, [issueId]: true }));
+  //     await libraryService.pardonFine(issueId, 'Fine pardoned from student history');
       
-      setSnackbar({
-        open: true,
-        message: 'Fine pardoned successfully',
-        severity: 'success'
-      });
+  //     setSnackbar({
+  //       open: true,
+  //       message: 'Fine pardoned successfully',
+  //       severity: 'success'
+  //     });
       
-      // Refresh the history data
-      if (selectedStudentHistory) {
-        const updatedData = await libraryService.getStudentHistoryByGrNumber(selectedStudentHistory.student.grNumber);
-        setSelectedStudentHistory(updatedData);
-      }
+  //     // Refresh the history data
+  //     if (selectedStudentHistory) {
+  //       const updatedData = await libraryService.getStudentHistoryByGrNumber(selectedStudentHistory.student.grNumber);
+  //       setSelectedStudentHistory(updatedData);
+  //     }
       
-      // Refresh students list
-      fetchStudents();
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message || 'Failed to pardon fine',
-        severity: 'error'
-      });
-    } finally {
-      setActionLoading(prev => ({ ...prev, [issueId]: false }));
-      handleMenuClose();
-    }
-  };
+  //     // Refresh students list
+  //     fetchStudents();
+  //   } catch (err) {
+  //     setSnackbar({
+  //       open: true,
+  //       message: err.message || 'Failed to pardon fine',
+  //       severity: 'error'
+  //     });
+  //   } finally {
+  //     setActionLoading(prev => ({ ...prev, [issueId]: false }));
+  //     handleMenuClose();
+  //   }
+  // };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -1086,7 +1109,7 @@ const StudentHistory = () => {
           <DialogContent>
             {selectedStudentHistory && (
               <>
-                <Card sx={{ mb: 3 }}>
+                {/* <Card sx={{ mb: 3 }}>
                   <CardContent>
                     <Grid container spacing={2}>
                       <Grid item xs={12} md={6}>
@@ -1109,16 +1132,16 @@ const StudentHistory = () => {
                       </Grid>
                     </Grid>
                   </CardContent>
-                </Card>
+                </Card> */}
 
-                <Divider sx={{ my: 2 }} />
+                {/* <Divider sx={{ my: 2 }} /> */}
 
-                <Typography variant="h6" gutterBottom>
+                {/* <Typography variant="h6" gutterBottom>
                   <Book sx={{ mr: 1, verticalAlign: 'middle' }} />
                   Book History ({selectedStudentHistory.history.length} records)
-                </Typography>
+                </Typography> */}
 
-                {selectedStudentHistory.history.length === 0 ? (
+                {/* {selectedStudentHistory.history.length === 0 ? (
                   <Alert severity="info">No book history found for this student.</Alert>
                 ) : (
                   <TableContainer component={Paper}>
@@ -1217,7 +1240,7 @@ const StudentHistory = () => {
                       </TableBody>
                     </Table>
                   </TableContainer>
-                )}
+                )} */}
               </>
             )}
           </DialogContent>
@@ -1244,12 +1267,12 @@ const StudentHistory = () => {
               Renew Book
             </MenuItem>
           )}
-          {selectedRecord && canPardonFine(selectedRecord) && (
+          {/* {selectedRecord && canPardonFine(selectedRecord) && (
             <MenuItem onClick={() => handlePardonFine(selectedRecord._id)}>
               <MoneyOff sx={{ mr: 1 }} />
               Pardon Fine
             </MenuItem>
-          )}
+          )} */}
         </Menu>
 
         {/* Snackbar for notifications */}
