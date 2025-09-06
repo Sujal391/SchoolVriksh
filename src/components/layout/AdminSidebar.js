@@ -93,12 +93,12 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
       path: "/admin/results",
       badge: null,
     },
-    {
-      text: "Timetable",
-      icon: <TimetableIcon />,
-      path: "/admin/timetable",
-      badge: null,
-    },
+    // {
+    //   text: "Timetable",
+    //   icon: <TimetableIcon />,
+    //   path: "/admin/timetable",
+    //   badge: null,
+    // },
     {
       text: "Leave Requests",
       icon: <LeaveRequestsIcon />,
