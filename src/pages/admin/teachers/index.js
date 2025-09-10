@@ -224,10 +224,11 @@ const TeachersPage = () => {
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Teacher Management</h1>
         <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Teacher Management</h1>            
           <Button
           variant="contained"
+          size="small"
           onClick={() => setIsCreateModalOpen(true)}            
           >
             Add New Teacher
