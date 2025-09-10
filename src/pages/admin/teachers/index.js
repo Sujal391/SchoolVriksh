@@ -165,6 +165,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import TeacherTable from '../../../components/admin/TeacherManagement';
 import AssignTeacherModal from '../../../components/admin/AssignTeacherModal';
 import CreateTeacherModal from '../../../components/admin/CreateTeacherModal';
+import { Button } from '@mui/material';
 
 const TeachersPage = () => {
   const [teachers, setTeachers] = useState([]);
@@ -223,26 +224,21 @@ const TeachersPage = () => {
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Teacher Management</h1>
+        <h1 className="text-3xl font-bold mb-6">Teacher Management</h1>
         <div className="flex justify-between items-center mb-6">
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          <Button
+          variant="contained"
+          onClick={() => setIsCreateModalOpen(true)}            
           >
             Add New Teacher
-          </button>
+          </Button>
         </div>
         
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <p>Loading teachers...</p>
-          </div>
-        ) : (
-          <TeacherTable 
-            teachers={teachers} 
+        <TeacherTable 
+            teachers={teachers}
+            loading={loading}
             onAssignClick={handleAssignClick} 
-          />
-        )}
+          />        
         
         <AssignTeacherModal
           isOpen={isAssignModalOpen}

@@ -178,17 +178,17 @@ const StudentsPage = () => {
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Student Management</h1>
+        <h1 className="text-3xl font-bold mb-6">Student Management</h1>
 
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
         <div className="flex justify-between items-center mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Select Class</label>
+            <label className="block text-md font-medium text-gray-700">Select Class</label>
             <select
               value={selectedClassId}
               onChange={(e) => setSelectedClassId(e.target.value)}
-              className="mt-1 block w-48 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              className="mt-1 block h-10 w-48 p-2 border rounded-sm  shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             >
               <option value="">Select a class</option>
               {classes.map((cls) => (
@@ -209,19 +209,11 @@ const StudentsPage = () => {
           </button> */}
         </div>
 
-        {loading ? (
-          <p>Loading students...</p>
-        ) : selectedClassId ? (
-          <StudentTable
-            students={students}
-            onEdit={(student) => {
-              setSelectedStudent(student);
-              setIsModalOpen(true);
-            }}
-          />
-        ) : (
-          <p>Please select a class to view students.</p>
-        )}
+        <StudentTable
+          students={students}
+          selectedClassId={selectedClassId}
+          loading={loading}
+        />
 
         <StudentFormModal
           isOpen={isModalOpen}

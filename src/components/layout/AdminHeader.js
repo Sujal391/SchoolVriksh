@@ -496,8 +496,8 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 
-const AdminHeader = ({ onMenuClick }) => {
-  const { user, logout } = useAuth();
+const AdminHeader = ({ toggleSidebar, user }) => {
+  const { logout } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -565,7 +565,7 @@ const AdminHeader = ({ onMenuClick }) => {
           {/* Mobile Menu Button */}
           <IconButton
             edge="start"
-            onClick={onMenuClick}
+            onClick={toggleSidebar}
             sx={{
               display: { lg: "none" },
               color: "#ffffff",
