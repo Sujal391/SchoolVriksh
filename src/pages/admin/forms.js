@@ -983,6 +983,8 @@ import {
   CardContent,
   CardActions,
   Stack,
+  Divider,
+  Modal,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
@@ -1002,6 +1004,9 @@ const AdmissionFormsPage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedFormId, setSelectedFormId] = useState(null);
+  const [applications, setApplications] = useState([]);
   const [qrCodeFile, setQrCodeFile] = useState(null); // New state for QR code file
   const [newForm, setNewForm] = useState({
     title: "",
@@ -1051,86 +1056,97 @@ const AdmissionFormsPage = () => {
     }
   };
 
- const handleCreateForm = async () => {
-  if (!newForm.title || newForm.admissionFee < 0 || !qrCodeFile) {
-    setError(
-      "Form title, valid admission fee, and QR code image are required"
-    );
-    return;
-  }
-
-  setLoading(true);
-  setError(null);
-
-  try {
-    const formData = new FormData();
-    formData.append("title", newForm.title.trim());
-    formData.append("description", newForm.description.trim());
-    formData.append("admissionFee", Number(newForm.admissionFee));
-    
-    // Fix: Handle empty additionalFields properly
-    if (newForm.additionalFields && newForm.additionalFields.length > 0) {
-      // If there are additional fields, send each one individually
-      newForm.additionalFields.forEach((field, index) => {
-        formData.append(`additionalFields[${index}][name]`, field.name);
-        formData.append(`additionalFields[${index}][label]`, field.label);
-        formData.append(`additionalFields[${index}][type]`, field.type);
-        formData.append(`additionalFields[${index}][required]`, field.required);
-        
-        // Handle options array if it exists
-        if (field.options && field.options.length > 0) {
-          field.options.forEach((option, optionIndex) => {
-            formData.append(`additionalFields[${index}][options][${optionIndex}]`, option);
-          });
-        }
-        
-        // Handle validation object if it exists
-        if (field.validation) {
-          Object.keys(field.validation).forEach(validationKey => {
-            formData.append(`additionalFields[${index}][validation][${validationKey}]`, field.validation[validationKey]);
-          });
-        }
-      });
-    }
-    // If no additional fields, don't append anything (backend will use default empty array)
-    
-    formData.append("qrCode", qrCodeFile);
-
-    // Debug: Log form data contents
-    console.log("Form data being sent:");
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
+  const handleCreateForm = async () => {
+    if (!newForm.title || newForm.admissionFee < 0 || !qrCodeFile) {
+      setError(
+        "Form title, valid admission fee, and QR code image are required"
+      );
+      return;
     }
 
-    const response = await AdminService.createAdmissionForm(formData);
+    setLoading(true);
+    setError(null);
 
-    const newFormData = {
-      id: response.id || response._id,
-      title: response.title,
-      formUrl: response.formUrl,
-      status: response.isActive ? "Active" : "Inactive",
-      createdAt: response.createdAt || new Date().toISOString(),
-      admissionFee: response.admissionFee || 0,
-      description: response.description || "",
-      hasQRCode: !!(response.paymentQRCode && response.paymentQRCode.url),
-    };
+    try {
+      const formData = new FormData();
+      formData.append("title", newForm.title.trim());
+      formData.append("description", newForm.description.trim());
+      formData.append("admissionFee", Number(newForm.admissionFee));
 
-    setForms([newFormData, ...forms]);
-    setOpenCreateDialog(false);
-    resetFormState();
-    setSuccess(
-      `Form created successfully! Share this link with students: ${getBaseUrl()}/${response.formUrl}`
-    );
-  } catch (error) {
-    console.error("Form creation error:", error);
-    setError(
-      "Failed to create form: " +
-        (error.response?.data?.error || error.message)
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+      // Fix: Handle empty additionalFields properly
+      if (newForm.additionalFields && newForm.additionalFields.length > 0) {
+        // If there are additional fields, send each one individually
+        newForm.additionalFields.forEach((field, index) => {
+          formData.append(`additionalFields[${index}][name]`, field.name);
+          formData.append(`additionalFields[${index}][label]`, field.label);
+          formData.append(`additionalFields[${index}][type]`, field.type);
+          formData.append(
+            `additionalFields[${index}][required]`,
+            field.required
+          );
+
+          // Handle options array if it exists
+          if (field.options && field.options.length > 0) {
+            field.options.forEach((option, optionIndex) => {
+              formData.append(
+                `additionalFields[${index}][options][${optionIndex}]`,
+                option
+              );
+            });
+          }
+
+          // Handle validation object if it exists
+          if (field.validation) {
+            Object.keys(field.validation).forEach((validationKey) => {
+              formData.append(
+                `additionalFields[${index}][validation][${validationKey}]`,
+                field.validation[validationKey]
+              );
+            });
+          }
+        });
+      }
+      // If no additional fields, don't append anything (backend will use default empty array)
+
+      formData.append("qrCode", qrCodeFile);
+
+      // Debug: Log form data contents
+      console.log("Form data being sent:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+
+      const response = await AdminService.createAdmissionForm(formData);
+
+      const newFormData = {
+        id: response.id || response._id,
+        title: response.title,
+        formUrl: response.formUrl,
+        status: response.isActive ? "Active" : "Inactive",
+        createdAt: response.createdAt || new Date().toISOString(),
+        admissionFee: response.admissionFee || 0,
+        description: response.description || "",
+        hasQRCode: !!(response.paymentQRCode && response.paymentQRCode.url),
+      };
+
+      setForms([newFormData, ...forms]);
+      setOpenCreateDialog(false);
+      resetFormState();
+      setSuccess(
+        `Form created successfully! Share this link with students: ${getBaseUrl()}/${
+          response.formUrl
+        }`
+      );
+    } catch (error) {
+      console.error("Form creation error:", error);
+      setError(
+        "Failed to create form: " +
+          (error.response?.data?.error || error.message)
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
   // Add this helper function
   const resetFormState = () => {
     setNewForm({
@@ -1150,31 +1166,31 @@ const AdmissionFormsPage = () => {
     setQrCodeFile(null);
   };
 
-  const handleToggleFormStatus = async (formId, currentStatus) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const newStatus = currentStatus === "Active" ? false : true;
-      await AdminService.toggleFormStatus(formId, { isActive: newStatus });
-      setForms(
-        forms.map((form) =>
-          form.id === formId
-            ? { ...form, status: newStatus ? "Active" : "Inactive" }
-            : form
-        )
-      );
-      setSuccess(
-        `Form ${newStatus ? "activated" : "deactivated"} successfully!`
-      );
-    } catch (error) {
-      setError(
-        "Failed to toggle form status: " +
-          (error.response?.data?.error || error.message)
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleToggleFormStatus = async (formId, currentStatus) => {
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     const newStatus = currentStatus === "Active" ? false : true;
+  //     await AdminService.toggleFormStatus(formId, { isActive: newStatus });
+  //     setForms(
+  //       forms.map((form) =>
+  //         form.id === formId
+  //           ? { ...form, status: newStatus ? "Active" : "Inactive" }
+  //           : form
+  //       )
+  //     );
+  //     setSuccess(
+  //       `Form ${newStatus ? "activated" : "deactivated"} successfully!`
+  //     );
+  //   } catch (error) {
+  //     setError(
+  //       "Failed to toggle form status: " +
+  //         (error.response?.data?.error || error.message)
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleAddField = () => {
     if (!newField.name || !newField.label) {
@@ -1235,10 +1251,29 @@ const AdmissionFormsPage = () => {
       });
   };
 
-  const handleViewApplications = (formId) => {
-    window.location.href = `/admin/applications?formId=${formId}`;
-  };
+  // Auto-remove error after 10s
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, setError]);
 
+  // const handleViewApplications = async (formId) => {
+  //   setSelectedFormId(formId);
+
+  //   try {
+  //     const response = await fetch(`/api/applications?formId=${formId}`); // Or use your service layer
+  //     const data = await response.json();
+  //     setApplications(data);
+  //     setOpenModal(true);
+  //   } catch (error) {
+  //     console.error("Failed to load applications", error);
+  //     // Optionally set an error state to display in modal
+  //   }
+  // };
+
+  // Mobile Card Component
   const FormCard = ({ form }) => (
     <Card
       sx={{
@@ -1272,13 +1307,13 @@ const AdmissionFormsPage = () => {
               </Typography>
             )}
           </Box>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Switch
+          <Box alignItems="center" gap={1}>
+            {/* <Switch
               checked={form.status === "Active"}
               onChange={() => handleToggleFormStatus(form.id, form.status)}
               disabled={loading}
               size="small"
-            />
+            /> */}
             <Chip
               label={form.status}
               color={form.status === "Active" ? "success" : "default"}
@@ -1365,7 +1400,7 @@ const AdmissionFormsPage = () => {
           </Box>
         </Stack>
       </CardContent>
-      <CardActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 }, pt: 0 }}>
+      {/* <CardActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 }, pt: 0 }}>
         <Button
           onClick={() => handleViewApplications(form.id)}
           variant="outlined"
@@ -1376,7 +1411,7 @@ const AdmissionFormsPage = () => {
         >
           View Applications
         </Button>
-      </CardActions>
+      </CardActions> */}
     </Card>
   );
 
@@ -1484,23 +1519,41 @@ const AdmissionFormsPage = () => {
               <Table>
                 <TableHead>
                   <TableRow sx={{ backgroundColor: theme.palette.grey[100] }}>
-                    <TableCell sx={{ fontWeight: 600, py: 2 }}>Title</TableCell>
-                    <TableCell sx={{ fontWeight: 600, py: 2 }}>
+                    <TableCell
+                      sx={{ fontWeight: 600, py: 2, textAlign: "center" }}
+                    >
+                      Title
+                    </TableCell>
+                    <TableCell
+                      sx={{ fontWeight: 600, py: 2, textAlign: "center" }}
+                    >
                       Form URL
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600, py: 2 }}>Fee</TableCell>
-                    <TableCell sx={{ fontWeight: 600, py: 2 }}>
+                    <TableCell
+                      sx={{ fontWeight: 600, py: 2, textAlign: "center" }}
+                    >
+                      Fee
+                    </TableCell>
+                    <TableCell
+                      sx={{ fontWeight: 600, py: 2, textAlign: "center" }}
+                    >
                       Status
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600, py: 2 }}>
+                    <TableCell
+                      sx={{ fontWeight: 600, py: 2, textAlign: "center" }}
+                    >
                       Created
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600, py: 2 }}>
+                    <TableCell
+                      sx={{ fontWeight: 600, py: 2, textAlign: "center" }}
+                    >
                       QR Code
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600, py: 2 }}>
+                    {/* <TableCell
+                      sx={{ fontWeight: 600, py: 2, textAlign: "center" }}
+                    >
                       Actions
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -1514,7 +1567,7 @@ const AdmissionFormsPage = () => {
                         transition: "background-color 0.2s ease",
                       }}
                     >
-                      <TableCell sx={{ py: 2 }}>
+                      <TableCell sx={{ py: 2, textAlign: "center" }}>
                         <Box>
                           <Typography variant="body1" fontWeight="600">
                             {form.title}
@@ -1529,8 +1582,13 @@ const AdmissionFormsPage = () => {
                           )}
                         </Box>
                       </TableCell>
-                      <TableCell sx={{ py: 2 }}>
-                        <Box display="flex" alignItems="center" gap={1}>
+                      <TableCell sx={{ py: 2, textAlign: "center" }}>
+                        <Box
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          gap={1}
+                        >
                           <Typography
                             variant="body2"
                             sx={{
@@ -1551,21 +1609,21 @@ const AdmissionFormsPage = () => {
                           </IconButton>
                         </Box>
                       </TableCell>
-                      <TableCell sx={{ py: 2 }}>
+                      <TableCell sx={{ py: 2, textAlign: "center" }}>
                         <Typography variant="body1" fontWeight="600">
                           ₹{form.admissionFee || 0}
                         </Typography>
                       </TableCell>
-                      <TableCell sx={{ py: 2 }}>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Switch
+                      <TableCell sx={{ py: 2, textAlign: "center" }}>
+                        <Box alignItems="center" gap={1}>
+                          {/* <Switch
                             checked={form.status === "Active"}
                             onChange={() =>
                               handleToggleFormStatus(form.id, form.status)
                             }
                             disabled={loading}
                             size="small"
-                          />
+                          /> */}
                           <Chip
                             label={form.status}
                             color={
@@ -1575,19 +1633,19 @@ const AdmissionFormsPage = () => {
                           />
                         </Box>
                       </TableCell>
-                      <TableCell sx={{ py: 2 }}>
+                      <TableCell sx={{ py: 2, textAlign: "center" }}>
                         <Typography variant="body2">
                           {form.createdAt
                             ? new Date(form.createdAt).toLocaleDateString()
                             : "N/A"}
                         </Typography>
                       </TableCell>
-                      <TableCell sx={{ py: 2 }}>
+                      <TableCell sx={{ py: 2, textAlign: "center" }}>
                         <Typography variant="body2">
                           {form.hasQRCode ? "Available" : "Not Set"}
                         </Typography>
                       </TableCell>
-                      <TableCell sx={{ py: 2 }}>
+                      {/* <TableCell sx={{ py: 2, textAlign: "center" }}>
                         <Button
                           onClick={() => handleViewApplications(form.id)}
                           variant="outlined"
@@ -1596,7 +1654,7 @@ const AdmissionFormsPage = () => {
                         >
                           View Applications
                         </Button>
-                      </TableCell>
+                      </TableCell> */}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -1620,240 +1678,230 @@ const AdmissionFormsPage = () => {
           }}
         >
           <DialogTitle
-            sx={{
-              borderBottom: "1px solid",
-              borderColor: "divider",
-              fontWeight: 600,
-              fontSize: { xs: "1.1rem", sm: "1.25rem" },
-              p: { xs: 2, sm: 3 },
-            }}
+            sx={{ fontWeight: 600, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
           >
             Create New Admission Form
           </DialogTitle>
+
+          <Divider />
+          
           <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
-            <Grid container spacing={3} sx={{ mt: 0.5 }}>
-              <Grid item xs={12}>
-                <TextField
-                  label="Form Title *"
-                  value={newForm.title}
-                  onChange={(e) =>
-                    setNewForm({ ...newForm, title: e.target.value })
-                  }
-                  fullWidth
-                  required
-                  error={!newForm.title}
-                  helperText={!newForm.title ? "Title is required" : ""}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Description"
-                  value={newForm.description}
-                  onChange={(e) =>
-                    setNewForm({ ...newForm, description: e.target.value })
-                  }
-                  fullWidth
-                  multiline
-                  rows={3}
-                  helperText="Brief description of the admission form"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Admission Fee (₹) *"
-                  type="number"
-                  value={newForm.admissionFee}
-                  onChange={(e) =>
-                    setNewForm({
-                      ...newForm,
-                      admissionFee: Number(e.target.value),
-                    })
-                  }
-                  fullWidth
-                  required
-                  inputProps={{ min: 0, step: 0.01 }}
-                  error={newForm.admissionFee < 0}
-                  helperText={
-                    newForm.admissionFee < 0
-                      ? "Fee cannot be negative"
-                      : "Enter 0 for free admission"
-                  }
-                />
-              </Grid>
-              {/* <Grid item xs={12}>
-                <Typography variant="subtitle1" sx={{ mb: 1 }}>QR Code for Payment *</Typography>
+            
+            <Typography variant="h6" sx={{ mb: 2 }}>Form Details</Typography>
+
+            <Stack spacing={3}>
+              <TextField
+                label="Form Title"
+                value={newForm.title}
+                onChange={(e) =>
+                  setNewForm({ ...newForm, title: e.target.value })
+                }
+                fullWidth
+                required
+                // error={!newForm.title}
+                helperText={!newForm.title ? "Title is required" : ""}
+              />
+
+              <TextField
+                label="Description"
+                value={newForm.description}
+                onChange={(e) =>
+                  setNewForm({ ...newForm, description: e.target.value })
+                }
+                fullWidth
+                multiline
+                rows={3}
+                helperText="Brief description of the admission form"
+              />
+
+              <TextField
+                label="Admission Fee (₹) "
+                type="number"
+                value={newForm.admissionFee}
+                onChange={(e) =>
+                  setNewForm({
+                    ...newForm,
+                    admissionFee: Number(e.target.value),
+                  })
+                }
+                fullWidth
+                required
+                inputProps={{ min: 0, step: 0.01 }}
+                error={newForm.admissionFee < 0}
+                helperText={
+                  newForm.admissionFee < 0
+                    ? "Fee cannot be negative"
+                    : "Enter 0 for free admission"
+                }
+              />
+
+              <Typography variant="subtitle1">QR Code for Payment *</Typography>
+              <Button
+                variant="outlined"
+                component="label"
+                fullWidth
+                sx={{
+                  borderRadius: 2,
+                  py: 2,
+                  borderStyle: qrCodeFile ? "solid" : "dashed",
+                  borderColor: qrCodeFile ? "success.main" : "grey.300",
+                  backgroundColor: qrCodeFile ? "#86c983" : "transparent",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                    backgroundColor: qrCodeFile ? "success.light" : "grey.50",
+                  },
+                }}
+              >
+                {qrCodeFile ? (
+                  <Stack alignItems="center">
+                    <Typography color="#254223">
+                      ✓ {qrCodeFile.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Click to change file
+                    </Typography>
+                  </Stack>
+                ) : (
+                  "Upload QR Code Image (PNG/JPG)"
+                )}
                 <input
                   type="file"
-                  accept="image/jpeg,image/png"
+                  hidden
+                  accept="image/png, image/jpeg"
                   onChange={(e) => setQrCodeFile(e.target.files[0])}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
-                {qrCodeFile && <p className="text-xs text-green-600 mt-1">✓ File selected: {qrCodeFile.name}</p>}
-              </Grid> */}
+              </Button>
+              <Typography variant="caption" color="text.secondary">
+                Upload a clear image of the payment QR code (Max 5MB)
+              </Typography>
 
-              <Grid item xs={12}>
-                <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                  QR Code for Payment *
-                </Typography>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  fullWidth
-                  sx={{
-                    borderRadius: 2,
-                    py: 2,
-                    borderStyle: qrCodeFile ? "solid" : "dashed",
-                    borderColor: qrCodeFile ? "success.main" : "grey.300",
-                    backgroundColor: qrCodeFile
-                      ? "success.light"
-                      : "transparent",
-                    "&:hover": {
-                      borderColor: "primary.main",
-                      backgroundColor: qrCodeFile ? "success.light" : "grey.50",
-                    },
-                  }}
-                >
-                  {qrCodeFile ? (
-                    <Box textAlign="center">
-                      <Typography color="success.main">
-                        ✓ {qrCodeFile.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Click to change file
-                      </Typography>
-                    </Box>
-                  ) : (
-                    "Upload QR Code Image (PNG/JPG)"
-                  )}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/png, image/jpeg"
-                    onChange={(e) => setQrCodeFile(e.target.files[0])}
-                  />
-                </Button>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mt: 1, display: "block" }}
-                >
-                  Upload a clear image of the payment QR code (Max 5MB)
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
-                  Add Custom Fields
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Field Name *"
-                  value={newField.name}
-                  onChange={(e) =>
-                    setNewField({ ...newField, name: e.target.value })
-                  }
-                  fullWidth
-                  placeholder="e.g., previousSchool"
-                  helperText="Use camelCase, letters and numbers only"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Field Label *"
-                  value={newField.label}
-                  onChange={(e) =>
-                    setNewField({ ...newField, label: e.target.value })
-                  }
-                  fullWidth
-                  placeholder="e.g., Previous School Name"
-                  helperText="Display label for users"
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Field Type</InputLabel>
-                  <Select
-                    value={newField.type}
-                    onChange={(e) =>
-                      setNewField({ ...newField, type: e.target.value })
-                    }
-                    label="Field Type"
-                  >
-                    <MenuItem value="text">Text</MenuItem>
-                    <MenuItem value="email">Email</MenuItem>
-                    <MenuItem value="tel">Phone</MenuItem>
-                    <MenuItem value="date">Date</MenuItem>
-                    <MenuItem value="select">Select/Dropdown</MenuItem>
-                    <MenuItem value="textarea">Textarea</MenuItem>
-                    <MenuItem value="number">Number</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={newField.required}
-                      onChange={(e) =>
-                        setNewField({ ...newField, required: e.target.checked })
-                      }
-                    />
-                  }
-                  label="Required Field"
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  label="Validation Pattern (Regex)"
-                  value={newField.validation.pattern || ""}
-                  onChange={(e) =>
-                    setNewField({
-                      ...newField,
-                      validation: {
-                        ...newField.validation,
-                        pattern: e.target.value,
-                      },
-                    })
-                  }
-                  fullWidth
-                  helperText="Optional regex for validation"
-                />
-              </Grid>
-              {newField.type === "select" && (
-                <Grid item xs={12}>
+              <Divider />
+
+              <Typography variant="h6">Add Custom Fields</Typography>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
                   <TextField
-                    label="Options (comma-separated) *"
-                    value={newField.options.join(", ")}
+                    label="Field Name *"
+                    value={newField.name}
+                    onChange={(e) =>
+                      setNewField({ ...newField, name: e.target.value })
+                    }
+                    fullWidth
+                    placeholder="e.g., previousSchool"
+                    helperText="Use camelCase, letters and numbers only"
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Field Label *"
+                    value={newField.label}
+                    onChange={(e) =>
+                      setNewField({ ...newField, label: e.target.value })
+                    }
+                    fullWidth
+                    placeholder="e.g., Previous School Name"
+                    helperText="Display label for users"
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>Field Type</InputLabel>
+                    <Select
+                      value={newField.type}
+                      onChange={(e) =>
+                        setNewField({ ...newField, type: e.target.value })
+                      }
+                      label="Field Type"
+                    >
+                      <MenuItem value="text">Text</MenuItem>
+                      <MenuItem value="email">Email</MenuItem>
+                      <MenuItem value="tel">Phone</MenuItem>
+                      <MenuItem value="date">Date</MenuItem>
+                      <MenuItem value="select">Select/Dropdown</MenuItem>
+                      <MenuItem value="textarea">Textarea</MenuItem>
+                      <MenuItem value="number">Number</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} sm={4}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={newField.required}
+                        onChange={(e) =>
+                          setNewField({
+                            ...newField,
+                            required: e.target.checked,
+                          })
+                        }
+                      />
+                    }
+                    label="Required Field"
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    label="Validation Pattern (Regex)"
+                    value={newField.validation.pattern || ""}
                     onChange={(e) =>
                       setNewField({
                         ...newField,
-                        options: e.target.value.split(",").map((o) => o.trim()),
+                        validation: {
+                          ...newField.validation,
+                          pattern: e.target.value,
+                        },
                       })
                     }
                     fullWidth
-                    placeholder="Option 1, Option 2, Option 3"
-                    helperText="Required for select type fields"
+                    helperText="Optional regex for validation"
                   />
                 </Grid>
-              )}
-              <Grid item xs={12}>
-                <Button
-                  variant="outlined"
-                  onClick={handleAddField}
-                  disabled={
-                    !newField.name ||
-                    !newField.label ||
-                    (newField.type === "select" &&
-                      newField.options.length === 0)
-                  }
-                  sx={{ borderRadius: 2, textTransform: "none" }}
-                >
-                  Add Custom Field
-                </Button>
-              </Grid>
-              {newForm.additionalFields.length > 0 && (
+
+                {newField.type === "select" && (
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Options (comma-separated) *"
+                      value={newField.options.join(", ")}
+                      onChange={(e) =>
+                        setNewField({
+                          ...newField,
+                          options: e.target.value
+                            .split(",")
+                            .map((o) => o.trim()),
+                        })
+                      }
+                      fullWidth
+                      placeholder="Option 1, Option 2, Option 3"
+                      helperText="Required for select type fields"
+                    />
+                  </Grid>
+                )}
+
                 <Grid item xs={12}>
-                  <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                  <Button
+                    variant="outlined"
+                    onClick={handleAddField}
+                    disabled={
+                      !newField.name ||
+                      !newField.label ||
+                      (newField.type === "select" &&
+                        newField.options.length === 0)
+                    }
+                    sx={{ textTransform: "none", borderRadius: 2 }}
+                  >
+                    Add Custom Field
+                  </Button>
+                </Grid>
+              </Grid>
+
+              {newForm.additionalFields.length > 0 && (
+                <>
+                  <Typography variant="subtitle1">
                     Added Custom Fields:
                   </Typography>
                   <Stack spacing={1}>
@@ -1870,7 +1918,7 @@ const AdmissionFormsPage = () => {
                             field.required ? ", required" : ""
                           })`}
                           variant="outlined"
-                          sx={{ flexGrow: { xs: 1, sm: 0 } }}
+                          sx={{ flexGrow: 1 }}
                         />
                         <IconButton
                           size="small"
@@ -1882,30 +1930,26 @@ const AdmissionFormsPage = () => {
                       </Box>
                     ))}
                   </Stack>
-                </Grid>
+                </>
               )}
-            </Grid>
+            </Stack>
           </DialogContent>
+
           <DialogActions
             sx={{
               p: { xs: 2, sm: 3 },
               borderTop: "1px solid",
               borderColor: "divider",
-              gap: 1,
-              flexDirection: { xs: "column", sm: "row" },
             }}
           >
             <Button
               onClick={() => setOpenCreateDialog(false)}
               disabled={loading}
-              sx={{
-                textTransform: "none",
-                width: { xs: "100%", sm: "auto" },
-                order: { xs: 2, sm: 1 },
-              }}
+              sx={{ textTransform: "none" }}
             >
               Cancel
             </Button>
+
             <Button
               onClick={handleCreateForm}
               variant="contained"
@@ -1915,18 +1959,68 @@ const AdmissionFormsPage = () => {
                 newForm.admissionFee < 0 ||
                 !qrCodeFile
               }
-              sx={{
-                textTransform: "none",
-                borderRadius: 2,
-                px: 3,
-                width: { xs: "100%", sm: "auto" },
-                order: { xs: 1, sm: 2 },
-              }}
+              sx={{ textTransform: "none", borderRadius: 2 }}
             >
               {loading ? <CircularProgress size={20} /> : "Create Form"}
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* remove "{false && ()}" when modal has to show  */}
+        {false && (
+        <Modal open={openModal} onClose={() => setOpenModal(false)}>
+          <Box
+            sx={{
+              p: 3,
+              bgcolor: "white",
+              maxWidth: 600,
+              margin: "auto",
+              mt: 10,
+              borderRadius: 2,
+            }}
+          >
+            <Typography variant="h6" mb={2}>
+              Applications for Form ID: {selectedFormId}
+            </Typography>
+
+            {applications.length > 0 ? (
+              applications.map((app) => (
+                <Box
+                  key={app._id}
+                  sx={{
+                    mb: 2,
+                    p: 2,
+                    border: "1px solid #ddd",
+                    borderRadius: 1,
+                  }}
+                >
+                  <Typography>
+                    <strong>Name:</strong> {app.name}
+                  </Typography>
+                  <Typography>
+                    <strong>Email:</strong> {app.email}
+                  </Typography>
+                  <Typography>
+                    <strong>Submitted At:</strong>{" "}
+                    {new Date(app.createdAt).toLocaleString()}
+                  </Typography>
+                  {/* Add more fields as needed */}
+                </Box>
+              ))
+            ) : (
+              <Typography>No applications found.</Typography>
+            )}
+
+            <Button
+              onClick={() => setOpenModal(false)}
+              variant="contained"
+              sx={{ mt: 2 }}
+            >
+              Close
+            </Button>
+          </Box>
+        </Modal>
+        )}
 
         <Snackbar
           open={!!success}

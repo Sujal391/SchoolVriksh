@@ -25,6 +25,19 @@ export const ROLE_LABELS = {
   [ROLES.TRANSPORT]: 'Transport',
 };
 
+export const ROLE_COLORS = {
+  [ROLES.OWNER]: '#f28b82',            // Soft Red
+  [ROLES.ADMIN]: '#64b5f6',            // Medium Light Blue
+  [ROLES.TEACHER]: '#81c784',          // Medium Light Green
+  [ROLES.STUDENT]: '#ffb74d',          // Medium Light Orange
+  [ROLES.PARENT]: '#ba68c8',           // Medium Light Purple
+  [ROLES.CLERK]: '#4db6ac',            // Medium Teal
+  [ROLES.LIBRARIAN]: '#ffd54f',        // Medium Amber
+  [ROLES.INVENTORY_MANAGER]: '#bdbdbd', // Medium Gray
+  [ROLES.FEE_MANAGER]: '#4fc3f7',      // Light Blue but not too light
+  [ROLES.TRANSPORT]: '#9575cd',        // Medium Purple
+};
+
 export const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
   { value: 'inactive', label: 'Inactive' },

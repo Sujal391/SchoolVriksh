@@ -73,14 +73,12 @@
 
 // export default UsersPage;
 
-
-
-import { useState, useEffect } from 'react';
-import AdminLayout from '../../../components/layout/AdminLayout';
-import AdminService from '../../../services/adminService';
-import { useAuth } from '../../../contexts/AuthContext';
-import UserTable from '../../../components/admin/UserTable';
-import CreateUserModal from '../../../components/admin/CreateUserModal';
+import { useState, useEffect } from "react";
+import AdminLayout from "../../../components/layout/AdminLayout";
+import AdminService from "../../../services/adminService";
+import { useAuth } from "../../../contexts/AuthContext";
+import UserTable from "../../../components/admin/UserTable";
+import CreateUserModal from "../../../components/admin/CreateUserModal";
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -96,7 +94,7 @@ const UsersPage = () => {
       // Filter out student roles as they're already excluded in backend
       setUsers(response || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
       setUsers([]);
     } finally {
       setLoading(false);
@@ -110,7 +108,7 @@ const UsersPage = () => {
   const handleEditClick = (user) => {
     setSelectedUser(user);
     // Implement edit modal or redirect to edit page if needed
-    alert('Edit functionality to be implemented');
+    alert("Edit functionality to be implemented");
   };
 
   const handleUserCreated = (newUser) => {
@@ -121,7 +119,7 @@ const UsersPage = () => {
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">User Management</h1>
+        <h1 className="text-3xl font-bold mb-6">User Management</h1>
         <div className="flex justify-between items-center mb-6">
           <button
             onClick={() => setIsCreateModalOpen(true)}
@@ -131,13 +129,11 @@ const UsersPage = () => {
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <p>Loading users...</p>
-          </div>
-        ) : (
-          <UserTable users={users} onEditClick={handleEditClick} />
-        )}
+        <UserTable
+          users={users}
+          onEditClick={handleEditClick}
+          loading={loading}
+        />
 
         <CreateUserModal
           isOpen={isCreateModalOpen}
