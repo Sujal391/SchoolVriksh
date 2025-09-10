@@ -79,6 +79,7 @@ import AdminService from "../../../services/adminService";
 import { useAuth } from "../../../contexts/AuthContext";
 import UserTable from "../../../components/admin/UserTable";
 import CreateUserModal from "../../../components/admin/CreateUserModal";
+import { Button } from "@mui/material";
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -119,14 +120,15 @@ const UsersPage = () => {
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">User Management</h1>
         <div className="flex justify-between items-center mb-6">
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          <h1 className="text-3xl font-bold">User Management</h1>
+          <Button
+          variant="contained"
+          size="small"
+          onClick={() => setIsCreateModalOpen(true)}
           >
             Add New User
-          </button>
+          </Button>
         </div>
 
         <UserTable

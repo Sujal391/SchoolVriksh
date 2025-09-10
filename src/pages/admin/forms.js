@@ -1492,14 +1492,14 @@ const AdmissionFormsPage = () => {
               Create your first admission form to get started with student
               registrations
             </Typography>
-            <Button
+            {/* <Button
               variant="contained"
               onClick={() => setOpenCreateDialog(true)}
               size="large"
               sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
             >
               Create Your First Form
-            </Button>
+            </Button> */}
           </Paper>
         ) : isMobile || isTablet ? (
           <Box>
@@ -1557,7 +1557,24 @@ const AdmissionFormsPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {forms.map((form) => (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={6}>
+                        <Box
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          gap={2}
+                        >
+                          <CircularProgress size={20} />
+                          <Typography variant="body2" color="text.secondary">
+                            Loading...
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                  forms.map((form) => (
                     <TableRow
                       key={form.id}
                       sx={{
@@ -1656,7 +1673,8 @@ const AdmissionFormsPage = () => {
                         </Button>
                       </TableCell> */}
                     </TableRow>
-                  ))}
+                  ))
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
