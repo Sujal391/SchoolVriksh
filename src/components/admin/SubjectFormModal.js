@@ -10,6 +10,7 @@ import {
   FormControl,
   InputLabel,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 
 const modalStyle = {
@@ -36,6 +37,7 @@ const SubjectFormModal = ({
     classId: "",
     status: "active",
   });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (subjectData) {
@@ -61,8 +63,18 @@ const SubjectFormModal = ({
     }));
   };
 
-  const handleSubmit = () => {
-    onSubmit(formData);
+  const handleSubmit = async () => {
+    if (submitting) return; // Block double submissions
+
+    setSubmitting(true);
+
+    try {
+      await onSubmit(formData);
+    } catch (err) {
+      console.error('Unexpected error in handleSubmit:', err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -118,8 +130,19 @@ const SubjectFormModal = ({
           <Button variant="outlined" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleSubmit}>
-            {subjectData ? "Update" : "Create"}
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <>
+                <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                {subjectData ? 'Updating...' : 'Creating...'}
+              </>
+            ) : (
+              subjectData ? 'Update' : 'Create'
+            )}
           </Button>
         </Box>
       </Box>

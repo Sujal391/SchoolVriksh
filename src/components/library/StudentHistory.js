@@ -69,7 +69,7 @@ const StudentHistory = () => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      {/* <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Student Book History</Typography>
         <Button
           variant="outlined"
@@ -163,7 +163,7 @@ const StudentHistory = () => {
             )}
           </TableBody>
         </Table>
-      </TableContainer>
+      </TableContainer> */}
     </Box>
   );
 };

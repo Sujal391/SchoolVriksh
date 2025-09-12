@@ -808,7 +808,7 @@ import {
   Snackbar,
   Card,
   CardContent,
-  Grid
+  Tooltip,
 } from '@mui/material';
 import { 
   ArrowBack, 
@@ -975,32 +975,42 @@ const StudentHistoryDetail = () => {
   //   }
   // };
 
-  // const handlePardonFine = async (issueId) => {
-  //   try {
-  //     setActionLoading(prev => ({ ...prev, [issueId]: true }));
-  //     await libraryService.pardonFine(issueId, 'Fine pardoned from student history detail');
-      
-  //     setSnackbar({
-  //       open: true,
-  //       message: 'Fine pardoned successfully',
-  //       severity: 'success'
-  //     });
-      
-  //     // Refresh the history data
-  //     const data = await libraryService.getStudentHistory(studentId);
-  //     setHistory(data.history || []);
-      
-  //   } catch (err) {
-  //     setSnackbar({
-  //       open: true,
-  //       message: err.message || 'Failed to pardon fine',
-  //       severity: 'error'
-  //     });
-  //   } finally {
-  //     setActionLoading(prev => ({ ...prev, [issueId]: false }));
-  //     handleMenuClose();
-  //   }
-  // };
+  const handlePardonFine = async (issueId) => {
+  try {
+    setActionLoading(prev => ({ ...prev, [issueId]: true }));
+
+    const response = await libraryService.pardonFine(issueId, 'Fine pardoned from student history detail');
+    
+    if (response.emailError) {
+      setSnackbar({
+        open: true,
+        message: 'Fine pardoned, but email notification failed.',
+        severity: 'warning'
+      });
+    } else {
+      setSnackbar({
+        open: true,
+        message: 'Fine pardoned successfully',
+        severity: 'success'
+      });
+    }
+
+    // Always refresh the history data
+    const data = await libraryService.getStudentHistory(studentId);
+    setHistory(data.history || []);
+
+  } catch (err) {
+    setSnackbar({
+      open: true,
+      message: err.message || 'Failed to pardon fine',
+      severity: 'error'
+    });
+  } finally {
+    setActionLoading(prev => ({ ...prev, [issueId]: false }));
+    handleMenuClose();
+  }
+};
+
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -1117,7 +1127,7 @@ const StudentHistoryDetail = () => {
                   <Typography>Email: {student.email || 'N/A'}</Typography>
                   {student.parentDetails && (
                     <Typography>
-                      Parent: {student.parentDetails.name || 'N/A'} ({student.parentDetails.contact || 'N/A'})
+                      Parent: {student.parentDetails.name || 'N/A'} ({student.parentDetails.mobile || 'N/A'})
                     </Typography>
                   )}
                 </Box>
@@ -1229,17 +1239,19 @@ const StudentHistoryDetail = () => {
                     </TableCell> */}
                     {canPerformActions() && (
                       <TableCell>
-                        <IconButton
-                          onClick={(e) => handleMenuClick(e, item)}
-                          disabled={actionLoading[item._id]}
-                          size="small"
+                        <Tooltip
+                          title={item.status === 'returned' ? 'No actions available for returned books' : 'Actions'}
                         >
-                          {actionLoading[item._id] ? (
-                            <CircularProgress size={20} />
-                          ) : (
-                            <MoreVert />
-                          )}
-                        </IconButton>
+                          <span>
+                            <IconButton
+                              onClick={(e) => handleMenuClick(e, item)}
+                              disabled={item.status === 'returned' || actionLoading[item._id]}
+                              size="small"
+                            >
+                              {actionLoading[item._id] ? <CircularProgress size={20} /> : <MoreVert />}
+                            </IconButton>
+                          </span>
+                        </Tooltip>
                       </TableCell>
                     )}
                   </TableRow>
@@ -1266,13 +1278,13 @@ const StudentHistoryDetail = () => {
               <Autorenew sx={{ mr: 1 }} />
               Renew Book
             </MenuItem>
-          )}
+          )} */}
           {selectedRecord && canPardonFine(selectedRecord) && (
             <MenuItem onClick={() => handlePardonFine(selectedRecord._id)}>
               <MoneyOff sx={{ mr: 1 }} />
               Pardon Fine
             </MenuItem>
-          )} */}
+          )}
         </Menu>
 
         {/* Snackbar for notifications */}

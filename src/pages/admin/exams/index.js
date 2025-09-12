@@ -4,6 +4,7 @@ import AdminService from '../../../services/adminService';
 import ExamEventTable from '../../../components/admin/ExamEventManagement';
 import ExamEventFormModal from '../../../components/admin/ExamEventFormModal';
 import { toast } from 'react-toastify';
+import Button from '@mui/material/Button';
 
 const ExamsPage = () => {
   const [examEvents, setExamEvents] = useState([]);
@@ -50,33 +51,30 @@ const ExamsPage = () => {
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Exam Management</h1>
         
         <div className="flex justify-between items-center mb-6">
-          <button 
+          <h1 className="text-3xl font-bold">Exam Management</h1>        
+          <Button
+            variant="contained"
+            size="small"
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
             onClick={() => {
               setSelectedExam(null);
               setIsModalOpen(true);
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
             Create New Exam Schedule
-          </button>
+          </Button>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        ) : (
           <ExamEventTable 
-            examEvents={examEvents} 
+            examEvents={examEvents}
+            loading={loading}
             onEdit={(exam) => {
               setSelectedExam(exam);
               setIsModalOpen(true);
             }}
           />
-        )}
 
         <ExamEventFormModal
           isOpen={isModalOpen}
