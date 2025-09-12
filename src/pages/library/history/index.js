@@ -983,7 +983,7 @@ const StudentHistory = () => {
         </Box>
 
         {/* GR Number Search Section */}
-        <Card sx={{ mb: 3 }}>
+        {/* <Card sx={{ mb: 3 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               <History sx={{ mr: 1, verticalAlign: 'middle' }} />
@@ -1017,7 +1017,7 @@ const StudentHistory = () => {
               </Button>
             </Box>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <TextField
           fullWidth

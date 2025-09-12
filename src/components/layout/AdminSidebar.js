@@ -85,7 +85,7 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
       text: "Exams",
       icon: <ExamsIcon />,
       path: "/admin/exams",
-      badge: { color: "warning" },
+      badge: null,
     },
     {
       text: "Results",
@@ -103,7 +103,7 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
       text: "Leave Requests",
       icon: <LeaveRequestsIcon />,
       path: "/admin/leaves",
-      badge: { color: "error" },
+      badge: null,
     },
     
   ];
