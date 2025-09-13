@@ -341,11 +341,12 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Checkbox,
-  FormControlLabel,
   Box,
   Alert,
+  Grid,
   CircularProgress,
+  Chip,
+  OutlinedInput,
 } from '@mui/material';
 import AdminService from '../../services/adminService';
 
@@ -359,18 +360,24 @@ const CreateTeacherModal = ({ isOpen, onClose, onTeacherCreated }) => {
     classTeacherOf: '',
     subjectAssignments: [],
   });
-  const [availableClasses, setAvailableClasses] = useState([]);
+  const [allClasses, setAllClasses] = useState([]);
+  const [selectedClasses, setSelectedClasses] = useState([]);
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [subjectsByClass, setSubjectsByClass] = useState({});
-  const [selectedClassForSubjects, setSelectedClassForSubjects] = useState('');
+  const [availableSubjects, setAvailableSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       resetForm();
-      fetchAvailableClasses();
+      fetchAllClasses();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    updateAvailableSubjects();
+  }, [selectedClasses, subjectsByClass]);
 
   const resetForm = () => {
     setFormData({
@@ -382,94 +389,130 @@ const CreateTeacherModal = ({ isOpen, onClose, onTeacherCreated }) => {
       classTeacherOf: '',
       subjectAssignments: [],
     });
-    setAvailableClasses([]);
+    setAllClasses([]);
+    setSelectedClasses([]);
+    setSelectedSubjects([]);
     setSubjectsByClass({});
-    setSelectedClassForSubjects('');
+    setAvailableSubjects([]);
     setError('');
     setLoading(false);
   };
 
-  const fetchAvailableClasses = async () => {
+  const fetchAllClasses = async () => {
     try {
-      setLoading(true);
       const res = await AdminService.getAvailableClasses();
-      const classes = res?.data?.available || res?.available || [];
-      setAvailableClasses(classes);
+      const availableClasses = res?.data?.available || res?.available || [];
+      const assignedClasses = res?.data?.assigned || res?.assigned || [];
+      
+      const combinedClasses = [...availableClasses, ...assignedClasses];
+      setAllClasses(combinedClasses);
     } catch (err) {
       console.error('Error fetching classes:', err);
-      setError('Failed to load available classes');
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchSubjectsByClass = async (classId) => {
+    if (subjectsByClass[classId]) return;
+
     try {
-      setLoading(true);
       const res = await AdminService.getSubjectsByClass(classId);
       const subjects =
         res?.data?.subjects ||
         (Array.isArray(res?.data) ? res.data : []) ||
         res?.subjects ||
         [];
+      
       setSubjectsByClass((prev) => ({
         ...prev,
         [classId]: subjects.map((subj) => ({
           _id: subj._id,
           name: subj.name,
-          isAssigned: false,
-          assignedTo: null,
+          classId: classId,
         })),
       }));
     } catch (err) {
       console.error('Error fetching subjects:', err);
       setSubjectsByClass((prev) => ({ ...prev, [classId]: [] }));
-      setError('Failed to load subjects for selected class');
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const updateAvailableSubjects = () => {
+    const subjects = [];
+    const subjectMap = new Map();
+
+    selectedClasses.forEach(classId => {
+      if (subjectsByClass[classId]) {
+        subjectsByClass[classId].forEach(subject => {
+          const key = `${subject._id}-${classId}`;
+          if (!subjectMap.has(key)) {
+            subjectMap.set(key, {
+              ...subject,
+              classId: classId,
+              displayName: `${subject.name} (${getClassDisplayName(classId)})`,
+              uniqueKey: key
+            });
+          }
+        });
+      }
+    });
+
+    setAvailableSubjects(Array.from(subjectMap.values()));
+  };
+
+  const getClassDisplayName = (classId) => {
+    const classItem = allClasses.find(cls => cls._id === classId);
+    if (classItem) {
+      return `${classItem.name}${classItem.division ? ` - ${classItem.division}` : ''}`;
+    }
+    return 'Unknown Class';
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setError('');
   };
 
   const handleClassTeacherChange = (e) => {
     setFormData((prev) => ({ ...prev, classTeacherOf: e.target.value }));
   };
 
-  const handleClassForSubjectsChange = async (classId) => {
-    setSelectedClassForSubjects(classId);
-    if (classId && !subjectsByClass[classId]) {
-      await fetchSubjectsByClass(classId);
+  const handleClassSelectionChange = async (event) => {
+    const value = event.target.value;
+    const newSelectedClasses = typeof value === 'string' ? value.split(',') : value;
+    
+    setSelectedClasses(newSelectedClasses);
+    setSelectedSubjects([]);
+    
+    for (const classId of newSelectedClasses) {
+      if (!subjectsByClass[classId]) {
+        await fetchSubjectsByClass(classId);
+      }
     }
   };
 
-  const handleSubjectToggle = (subjectId, classId) => {
-    setFormData((prev) => {
-      const exists = prev.subjectAssignments.some(
-        (sa) => sa.subjectId === subjectId && sa.classId === classId
-      );
+  const handleSubjectSelectionChange = (event) => {
+    const value = event.target.value;
+    const newSelectedSubjects = typeof value === 'string' ? value.split(',') : value;
+    setSelectedSubjects(newSelectedSubjects);
+
+    const subjectAssignments = newSelectedSubjects.map(uniqueKey => {
+      const subject = availableSubjects.find(subj => subj.uniqueKey === uniqueKey);
       return {
-        ...prev,
-        subjectAssignments: exists
-          ? prev.subjectAssignments.filter(
-              (sa) => !(sa.subjectId === subjectId && sa.classId === classId)
-            )
-          : [...prev.subjectAssignments, { classId, subjectId }],
+        classId: subject.classId,
+        subjectId: subject._id
       };
     });
+
+    setFormData(prev => ({
+      ...prev,
+      subjectAssignments
+    }));
   };
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.email || !formData.password) {
-      setError('Name, email, and password are required');
-      return;
-    }
-
-    if (formData.subjectAssignments.length === 0) {
-      setError('At least one subject assignment is required');
+      setError('Name, email, and password are required.');
       return;
     }
 
@@ -482,7 +525,8 @@ const CreateTeacherModal = ({ isOpen, onClose, onTeacherCreated }) => {
         (await AdminService.checkEmailAvailability(formData.email));
 
       if (emailAvailable === false) {
-        setError('Email is already registered');
+        setError('Email is already registered.');
+        setLoading(false);
         return;
       }
 
@@ -500,7 +544,7 @@ const CreateTeacherModal = ({ isOpen, onClose, onTeacherCreated }) => {
       setError(
         err.response?.data?.message ||
         err.message ||
-        'Failed to create teacher'
+        'Failed to create teacher.'
       );
     } finally {
       setLoading(false);
@@ -514,121 +558,162 @@ const CreateTeacherModal = ({ isOpen, onClose, onTeacherCreated }) => {
       <DialogContent dividers>
         {error && <Alert severity="error">{error}</Alert>}
 
-        <TextField
-          label="Name"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          fullWidth
-          required
-          margin="normal"
-        />
+        <Grid container spacing={2} justifyContent="center" alignItems="center">
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              fullWidth
+              required
+            />
+          </Grid>
 
-        <TextField
-          label="Email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange}
-          fullWidth
-          required
-          margin="normal"
-        />
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              fullWidth
+              required
+            />
+          </Grid>
 
-        <TextField
-          label="Password"
-          name="password"
-          type="password"
-          value={formData.password}
-          onChange={handleInputChange}
-          fullWidth
-          required
-          margin="normal"
-        />
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              fullWidth
+              required
+            />
+          </Grid>
 
-        <TextField
-          label="Phone"
-          name="phone"
-          value={formData.phone}
-          onChange={handleInputChange}
-          fullWidth
-          margin="normal"
-        />
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              fullWidth
+            />
+          </Grid>
 
-        <TextField
-          label="Address"
-          name="address"
-          value={formData.address}
-          onChange={handleInputChange}
-          fullWidth
-          margin="normal"
-        />
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Address"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+              fullWidth
+            />
+          </Grid>
 
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Class Teacher Assignment (Optional)</InputLabel>
-          <Select
-            value={formData.classTeacherOf}
-            onChange={handleClassTeacherChange}
-            label="Class Teacher Assignment (Optional)"
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            {availableClasses.map((cls) => (
-              <MenuItem key={cls._id} value={cls._id}>
-                {cls.name}{cls.division ? ` - ${cls.division}` : ''}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <InputLabel>Class Teacher Assignment (Optional)</InputLabel>
+              <Select
+                sx={{ minWidth: 225 }}
+                value={formData.classTeacherOf}
+                onChange={handleClassTeacherChange}
+                label="Class Teacher Assignment (Optional)"
+              >
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {allClasses.map((cls) => (
+                  <MenuItem key={cls._id} value={cls._id}>
+                    {cls.name}{cls.division ? ` - ${cls.division}` : ''}
+                    {cls.classTeacher ? ` (Current: ${cls.classTeacher.name})` : ''}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Select Class for Subject Assignments</InputLabel>
-          <Select
-            value={selectedClassForSubjects}
-            onChange={(e) => handleClassForSubjectsChange(e.target.value)}
-            label="Select Class for Subject Assignments"
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            {availableClasses.map((cls) => (
-              <MenuItem key={cls._id} value={cls._id}>
-                {cls.name}{cls.division ? ` - ${cls.division}` : ''}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+          <Grid item xs={12}>
+            <FormControl fullWidth>
+              <InputLabel>Select Classes for Subject Assignments</InputLabel>
+              <Select
+                sx={{ minWidth: 225 }}
+                multiple
+                value={selectedClasses}
+                onChange={handleClassSelectionChange}
+                input={<OutlinedInput label="Select Classes for Subject Assignments" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip 
+                        key={value} 
+                        label={getClassDisplayName(value)}
+                        size="small"
+                      />
+                    ))}
+                  </Box>
+                )}
+              >
+                {allClasses.map((cls) => (
+                  <MenuItem key={cls._id} value={cls._id}>
+                    {cls.name}{cls.division ? ` - ${cls.division}` : ''}
+                    {cls.classTeacher ? ` (Class Teacher: ${cls.classTeacher.name})` : ' (Available)'}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-        {selectedClassForSubjects && (
-          <Box mt={2}>
-            {subjectsByClass[selectedClassForSubjects]?.length ? (
-              subjectsByClass[selectedClassForSubjects].map((subject) => (
-                <FormControlLabel
-                  key={subject._id}
-                  control={
-                    <Checkbox
-                      checked={formData.subjectAssignments.some(
-                        (sa) =>
-                          sa.subjectId === subject._id &&
-                          sa.classId === selectedClassForSubjects
-                      )}
-                      onChange={() =>
-                        handleSubjectToggle(subject._id, selectedClassForSubjects)
-                      }
-                      disabled={subject.isAssigned}
-                    />
-                  }
-                  label={subject.name}
-                />
-              ))
-            ) : (
-              <Alert severity="warning">
-                No subjects found for selected class.
-              </Alert>
-            )}
-          </Box>
-        )}
+          <Grid item xs={12}>
+            <FormControl fullWidth disabled={selectedClasses.length === 0}>
+              <InputLabel>Select Subjects</InputLabel>
+              <Select
+                sx={{ minWidth: 225 }}
+                multiple
+                value={selectedSubjects}
+                onChange={handleSubjectSelectionChange}
+                input={<OutlinedInput label="Select Subjects" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => {
+                      const subject = availableSubjects.find(subj => subj.uniqueKey === value);
+                      return (
+                        <Chip 
+                          key={value} 
+                          label={subject?.displayName || 'Unknown Subject'}
+                          size="small"
+                        />
+                      );
+                    })}
+                  </Box>
+                )}
+              >
+                {availableSubjects.map((subject) => (
+                  <MenuItem key={subject.uniqueKey} value={subject.uniqueKey}>
+                    {subject.displayName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        <Box mt={2}>
+          {selectedClasses.length === 0 && (
+            <Alert severity="info">
+              Select classes first to view available subjects
+            </Alert>
+          )}
+          
+          {selectedClasses.length > 0 && availableSubjects.length === 0 && (
+            <Alert severity="warning">
+              No subjects available for the selected classes
+            </Alert>
+          )}
+        </Box>
       </DialogContent>
 
       <DialogActions>
@@ -638,7 +723,7 @@ const CreateTeacherModal = ({ isOpen, onClose, onTeacherCreated }) => {
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={loading || formData.subjectAssignments.length === 0}
+          disabled={loading}
         >
           {loading ? <CircularProgress size={24} /> : 'Create Teacher'}
         </Button>

@@ -52,6 +52,7 @@ const ClassesPage = () => {
           <Button
             variant="contained"
             size="small"
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
             onClick={() => {
               setSelectedClass(null);
               setIsModalOpen(true);
