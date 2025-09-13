@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { CalendarToday } from '@mui/icons-material';
 
 const badgeColors = {
   Final: 'bg-red-100 text-red-800',
@@ -106,15 +107,24 @@ const ExamEventTable = ({ examEvents, onEdit, loading }) => {
                     <TableCell>{exam.name}</TableCell>
                     <TableCell>
                       <span
-                        className={`px-2 py-1 text-xs rounded-full ${badgeColors[exam.examType]}`}
+                        className={`px-2 py-1 text-xs uppercase rounded-full ${badgeColors[exam.examType]}`}
                       >
                         {exam.examType === 'Other' ? exam.customExamType : exam.examType}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <div>{formatDate(exam.startDate)}</div>
-                      <div className="text-xs text-gray-500">to</div>
-                      <div>{formatDate(exam.endDate)}</div>
+                      <div className="flex items-center space-x-2 text-sm">
+                        <CalendarToday fontSize="small" color="action" />
+                        {exam.startDate === exam.endDate ? (
+                          <span className="font-medium">{formatDate(exam.startDate)}</span>
+                        ) : (
+                          <>
+                            <span className="font-medium">{formatDate(exam.startDate)}</span>
+                            <span className="text-gray-500">→</span>
+                            <span className="font-medium">{formatDate(exam.endDate)}</span>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Box display="flex" flexWrap="wrap" gap={1}>

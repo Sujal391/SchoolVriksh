@@ -256,43 +256,40 @@
 
 // export default ExamEventFormModal;
 
-import { useEffect, useState, useCallback } from "react";
+
+
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   TextField,
   Select,
   MenuItem,
-  InputLabel,
   FormControl,
+  InputLabel,
   Checkbox,
-  FormGroup,
   FormControlLabel,
-  CircularProgress,
+  FormGroup,
+  Button,
   Grid,
   Typography,
+  CircularProgress,
   Alert,
-} from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-import AdminService from "../../services/adminService";
+  Box
+} from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import AdminService from '../../services/adminService';
 
-const ExamEventFormModal = ({
-  isOpen,
-  onClose,
-  examData,
-  classes,
-  onSubmit,
-}) => {
+const ExamEventFormModal = ({ isOpen, onClose, examData, classes, onSubmit }) => {
   const [formData, setFormData] = useState({
-    examName: "",
-    examType: "Unit Test",
-    customExamType: "",
+    examName: '',
+    examType: 'Unit Test',
+    customExamType: '',
     startDate: new Date(),
     endDate: new Date(),
     classIds: [],
@@ -300,378 +297,294 @@ const ExamEventFormModal = ({
     maxExamsPerDay: 1,
     availableRooms: [],
     roomCapacities: {},
-    nonWorkingDays: [],
+    nonWorkingDays: []
   });
 
-  const [timeErrors, setTimeErrors] = useState({});
   const [availableSubjects, setAvailableSubjects] = useState({});
   const [loadingSubjects, setLoadingSubjects] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [warnings, setWarnings] = useState([]);
 
-  // Initialize form data when modal opens or examData changes
   useEffect(() => {
-    try {
-      if (examData) {
-        setFormData({
-          examName: examData.name || "",
-          examType: examData.examType || "Unit Test",
-          customExamType: examData.customExamType || "",
-          startDate: examData.startDate
-            ? new Date(examData.startDate)
-            : new Date(),
-          endDate: examData.endDate ? new Date(examData.endDate) : new Date(),
-          classIds: examData.classes?.map((c) => c._id) || [],
-          subjects: examData.subjects || [],
-          maxExamsPerDay: examData.maxExamsPerDay || 1,
-          availableRooms: examData.availableRooms || [],
-          roomCapacities: examData.roomCapacities || {},
-          nonWorkingDays:
-            examData.nonWorkingDays?.map((d) => {
-              try {
-                return new Date(d);
-              } catch {
-                return new Date();
-              }
-            }) || [],
-        });
-      } else {
-        // Reset form for new exam
-        setFormData({
-          examName: "",
-          examType: "Unit Test",
-          customExamType: "",
-          startDate: new Date(),
-          endDate: new Date(),
-          classIds: [],
-          subjects: [],
-          maxExamsPerDay: 1,
-          availableRooms: [],
-          roomCapacities: {},
-          nonWorkingDays: [],
-        });
-      }
-      setError("");
-    } catch (err) {
-      console.error("Error initializing form data:", err);
-      setError("Error loading exam data");
+    if (examData) {
+      setFormData({
+        examName: examData.name,
+        examType: examData.examType,
+        customExamType: examData.customExamType || '',
+        startDate: new Date(examData.startDate),
+        endDate: new Date(examData.endDate),
+        classIds: examData.classes?.map(c => c._id) || [],
+        subjects: examData.subjects || [],
+        maxExamsPerDay: examData.maxExamsPerDay || 1,
+        availableRooms: examData.availableRooms || [],
+        roomCapacities: examData.roomCapacities || {},
+        nonWorkingDays: examData.nonWorkingDays?.map(d => new Date(d)) || []
+      });
+    } else {
+      setFormData({
+        examName: '',
+        examType: 'Unit Test',
+        customExamType: '',
+        startDate: new Date(),
+        endDate: new Date(),
+        classIds: [],
+        subjects: [],
+        maxExamsPerDay: 1,
+        availableRooms: [],
+        roomCapacities: {},
+        nonWorkingDays: []
+      });
     }
   }, [isOpen, examData]);
 
-  
-const clearTimeErrorsOnInteraction = useCallback(() => {
-  if (Object.keys(timeErrors).length > 0) {
-    setTimeErrors({});
-  }
-}, [timeErrors]);
-
-  // Load subjects when classes change
-  useEffect(() => {
-    const loadSubjects = async () => {
-      if (formData.classIds.length === 0) {
-        setAvailableSubjects({});
-        return;
+  const calculateDuration = (startTime, endTime) => {
+    if (!startTime || !endTime) return { hours: 0, minutes: 0, totalHours: 0 };
+    
+    // Handle both string and Date object inputs
+    let startTimeStr = startTime;
+    let endTimeStr = endTime;
+    
+    if (startTime instanceof Date) {
+      startTimeStr = startTime.toTimeString().slice(0, 5);
+    }
+    if (endTime instanceof Date) {
+      endTimeStr = endTime.toTimeString().slice(0, 5);
+    }
+    
+    // Ensure we have valid time strings
+    if (!startTimeStr || !endTimeStr) return { hours: 0, minutes: 0, totalHours: 0 };
+    
+    try {
+      const start = new Date(`2000-01-01 ${startTimeStr}`);
+      const end = new Date(`2000-01-01 ${endTimeStr}`);
+      
+      let diffMs = end.getTime() - start.getTime();
+      
+      // Handle case where end time is next day (e.g., start: 23:00, end: 01:00)
+      if (diffMs < 0) {
+        diffMs += 24 * 60 * 60 * 1000; // Add 24 hours
       }
+      
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const totalHours = parseFloat((hours + minutes / 60).toFixed(2));
+      
+      return { hours, minutes, totalHours };
+    } catch (error) {
+      console.error('Error calculating duration:', error);
+      return { hours: 0, minutes: 0, totalHours: 0 };
+    }
+  };
 
-      setLoadingSubjects(true);
-      try {
-        const subjectsData = {};
-        for (const classId of formData.classIds) {
-          try {
-            const response = await AdminService.getSubjectsByClass(classId);
-            subjectsData[classId] = response.data || [];
-          } catch (err) {
-            console.error(`Error loading subjects for class ${classId}:`, err);
-            subjectsData[classId] = [];
+  // Generate warnings for form validation
+  const generateWarnings = () => {
+    const newWarnings = [];
+    
+    // Date validation
+    if (formData.startDate > formData.endDate) {
+      newWarnings.push("End date should be after or same as start date");
+    }
+    
+    // Check for very long exam durations
+    formData.subjects.forEach(subject => {
+      const duration = calculateDuration(subject.startTime, subject.endTime);
+      if (duration.totalHours > 5) {
+        const subjectName = availableSubjects[subject.classId]?.find(s => s._id === subject.subjectId)?.name || 'Unknown';
+        newWarnings.push(`${subjectName}: Exam duration is ${duration.totalHours} hours. Consider if this is appropriate.`);
+      }
+      if (duration.totalHours > 12) {
+        const subjectName = availableSubjects[subject.classId]?.find(s => s._id === subject.subjectId)?.name || 'Unknown';
+        newWarnings.push(`${subjectName}: Duration spans multiple days (${duration.totalHours} hours). Please verify times are correct.`);
+      }
+    });
+    
+    // Check for overlapping exam times
+    const timeSlots = formData.subjects.map(subject => ({
+      ...subject,
+      duration: calculateDuration(subject.startTime, subject.endTime)
+    }));
+    
+    for (let i = 0; i < timeSlots.length; i++) {
+      for (let j = i + 1; j < timeSlots.length; j++) {
+        const slot1 = timeSlots[i];
+        const slot2 = timeSlots[j];
+        
+        if (slot1.startTime && slot1.endTime && slot2.startTime && slot2.endTime) {
+          const start1 = new Date(`2000-01-01 ${slot1.startTime}`);
+          const end1 = new Date(`2000-01-01 ${slot1.endTime}`);
+          const start2 = new Date(`2000-01-01 ${slot2.startTime}`);
+          const end2 = new Date(`2000-01-01 ${slot2.endTime}`);
+          
+          if ((start1 <= start2 && end1 > start2) || (start2 <= start1 && end2 > start1)) {
+            newWarnings.push("Some exam times overlap. Please check the schedule.");
           }
         }
-        setAvailableSubjects(subjectsData);
-      } catch (err) {
-        console.error("Error loading subjects:", err);
-        setError("Failed to load subjects");
-      } finally {
-        setLoadingSubjects(false);
+      }
+    }
+    
+    setWarnings(newWarnings);
+  };
+
+  // Update warnings when relevant data changes
+  useEffect(() => {
+    generateWarnings();
+  }, [formData.startDate, formData.endDate, formData.subjects, availableSubjects]);
+
+  // Load subjects when classes are selected
+  useEffect(() => {
+    const loadSubjects = async () => {
+      if (formData.classIds.length > 0) {
+        setLoadingSubjects(true);
+        try {
+          const subjectsData = {};
+          for (const classId of formData.classIds) {
+            const response = await AdminService.getSubjectsByClass(classId);
+            subjectsData[classId] = response.data || [];
+          }
+          setAvailableSubjects(subjectsData);
+        } catch (error) {
+          console.error('Error loading subjects:', error);
+        } finally {
+          setLoadingSubjects(false);
+        }
+      } else {
+        setAvailableSubjects({});
       }
     };
 
     loadSubjects();
   }, [formData.classIds]);
 
-const handleChange = useCallback((e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    setError('');
-    clearTimeErrorsOnInteraction(); // Add this line
-}, [clearTimeErrorsOnInteraction]);
+  };
 
-  const handleDateChange = useCallback((newValue, name) => {
-    if (newValue && !isNaN(newValue.getTime())) {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: newValue,
-      }));
-      setError("");
-    }
-  }, []);
+  const handleDateChange = (date, name) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: date
+    }));
+  };
 
-  const handleClassToggle = useCallback((classId) => {
-  setFormData(prev => {
-    const newClassIds = prev.classIds.includes(classId)
-      ? prev.classIds.filter(id => id !== classId)
-      : [...prev.classIds, classId];
-
-    const newSubjects = prev.subjects.filter(s => newClassIds.includes(s.classId));
-
-    return { ...prev, classIds: newClassIds, subjects: newSubjects };
-  });
-  setError('');
-  clearTimeErrorsOnInteraction(); // Add this line
-}, [clearTimeErrorsOnInteraction]);
-
-  const handleSubjectToggle = useCallback((classId, subjectId) => {
-    setFormData((prev) => {
-      const exists = prev.subjects.find(
-        (s) => s.classId === classId && s.subjectId === subjectId
+  const handleClassToggle = (classId) => {
+    setFormData(prev => {
+      const alreadySelected = prev.classIds.includes(classId);
+      const newClassIds = alreadySelected
+        ? prev.classIds.filter(id => id !== classId)
+        : [...prev.classIds, classId];
+      
+      // Remove subjects that belong to deselected classes
+      const newSubjects = prev.subjects.filter(subject => 
+        newClassIds.includes(subject.classId)
       );
-      if (exists) {
+      
+      return {
+        ...prev,
+        classIds: newClassIds,
+        subjects: newSubjects
+      };
+    });
+  };
+
+  const handleSubjectToggle = (classId, subjectId) => {
+    setFormData(prev => {
+      const existingIndex = prev.subjects.findIndex(
+        s => s.classId === classId && s.subjectId === subjectId
+      );
+      
+      if (existingIndex >= 0) {
+        // Remove subject
         return {
           ...prev,
-          subjects: prev.subjects.filter(
-            (s) => !(s.classId === classId && s.subjectId === subjectId)
-          ),
+          subjects: prev.subjects.filter((_, index) => index !== existingIndex)
         };
       } else {
+        // Add subject with default values
         return {
           ...prev,
-          subjects: [
-            ...prev.subjects,
-            {
-              classId,
-              subjectId,
-              totalMarks: 100,
-              durationHours: 2,
-              startTime: "",
-              endTime: "",
-            },
-          ],
+          subjects: [...prev.subjects, {
+            classId,
+            subjectId,
+            totalMarks: 100,
+            durationHours: 2,
+            startTime: null,
+            endTime: null
+          }]
         };
       }
     });
-    setError("");
-  }, []);
+  };
 
-  const updateSubjectDetails = useCallback((classId, subjectId, field, value) => {
-  setFormData(prev => ({
-    ...prev,
-    subjects: prev.subjects.map(s => {
-      if (s.classId === classId && s.subjectId === subjectId) {
-        // Ensure we're not concatenating values
-        const updatedSubject = { ...s };
-        updatedSubject[field] = value;
-        return updatedSubject;
-      }
-      return s;
-    })
-  }));
-}, []);
-
-  const calculateDuration = useCallback((startTime, endTime) => {
-    if (startTime && endTime) {
-      try {
-        const start = new Date(startTime);
-        const end = new Date(endTime);
-
-        // Check for invalid dates
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-          return 0;
-        }
-
-        let diffMs = end - start;
-
-        // If end time is before start time, assume it's next day
-        if (diffMs < 0) {
-          diffMs += 24 * 60 * 60 * 1000; // Add 24 hours
-        }
-
-        const hours = diffMs / (1000 * 60 * 60);
-        return hours > 0 ? parseFloat(hours.toFixed(2)) : 0;
-      } catch {
-        return 0;
-      }
-    }
-    return "";
-  }, []);
-
-  const handleTimeChange = useCallback((classId, subjectId, timeType, newValue) => {
-  const errorKey = `${classId}-${subjectId}-${timeType}`;
-  const durationErrorKey = `${classId}-${subjectId}-duration`;
-  
-  // Clear previous errors for this field and duration
-  setTimeErrors(prev => {
-    const newErrors = { ...prev };
-    delete newErrors[errorKey];
-    delete newErrors[durationErrorKey];
-    return newErrors;
-  });
-  
-  // Handle invalid time (like 00:00 PM)
-  if (newValue && isNaN(newValue.getTime())) {
-    setTimeErrors(prev => ({
+  const updateSubjectDetails = (classId, subjectId, field, value) => {
+    setFormData(prev => ({
       ...prev,
-      [errorKey]: 'Invalid time format'
+      subjects: prev.subjects.map(subject => {
+        if (subject.classId === classId && subject.subjectId === subjectId) {
+          const updatedSubject = { ...subject, [field]: value };
+          
+          // Auto-calculate duration when time changes
+          if (field === 'startTime' || field === 'endTime') {
+            const startTime = field === 'startTime' ? value : subject.startTime;
+            const endTime = field === 'endTime' ? value : subject.endTime;
+            
+            if (startTime && endTime) {
+              const duration = calculateDuration(
+                startTime instanceof Date ? startTime.toTimeString().slice(0, 5) : startTime,
+                endTime instanceof Date ? endTime.toTimeString().slice(0, 5) : endTime
+              );
+              updatedSubject.durationHours = duration.totalHours;
+            }
+          }
+          
+          return updatedSubject;
+        }
+        return subject;
+      })
     }));
-    return;
-  }
-  
-  const timeString = newValue ? newValue.toISOString() : '';
-  
-  setFormData(prev => {
-    const updatedSubjects = prev.subjects.map(s => {
-      if (s.classId === classId && s.subjectId === subjectId) {
-        const updatedSubject = { ...s, [timeType]: timeString };
-        
-        const startTime = timeType === 'startTime' ? timeString : s.startTime;
-        const endTime = timeType === 'endTime' ? timeString : s.endTime;
-        
-        if (startTime && endTime) {
-          const duration = calculateDuration(startTime, endTime);
-          updatedSubject.durationHours = duration;
-          
-          // Add validation for unusually long durations
-          if (duration > 12) {
-            setTimeErrors(prev => ({
-              ...prev,
-              [durationErrorKey]: `Warning: ${duration} hours is unusually long for an exam`
-            }));
-          }
-        } else {
-          updatedSubject.durationHours = '';
-        }
-        
-        return updatedSubject;
-      }
-      return s;
-    });
+  };
+
+  const handleRoomsChange = (e) => {
+    const rooms = e.target.value.split(',').map(r => r.trim()).filter(r => r);
+    setFormData(prev => ({ ...prev, availableRooms: rooms }));
+  };
+
+  const formatTimeForDisplay = (time) => {
+    if (!time) return '';
+    if (time instanceof Date) {
+      return time.toTimeString().slice(0, 5);
+    }
+    return time;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
     
-    return { ...prev, subjects: updatedSubjects };
-  });
-}, [calculateDuration]);
-
-  const validateForm = useCallback(() => {
-    if (!formData.examName.trim()) {
-      return "Exam name is required";
-    }
-    if (formData.examType === "Other" && !formData.customExamType.trim()) {
-      return "Custom exam type is required";
-    }
+    // Validation
     if (formData.classIds.length === 0) {
-      return "Select at least one class";
+      alert('Please select at least one class');
+      return;
     }
+    
     if (formData.subjects.length === 0) {
-      return "Select at least one subject";
-    }
-    if (formData.startDate >= formData.endDate) {
-      return "End date must be after start date";
-    }
-    if (formData.maxExamsPerDay < 1) {
-      return "Max exams per day must be at least 1";
+      alert('Please select at least one subject');
+      return;
     }
 
-    // Validate subjects
-    for (const subject of formData.subjects) {
-      if (!subject.totalMarks || subject.totalMarks <= 0) {
-        return "All subjects must have valid total marks";
-      }
-      if (subject.startTime && subject.endTime) {
-        try {
-          const start = new Date(subject.startTime);
-          const end = new Date(subject.endTime);
-          if (start >= end) {
-            return "End time must be after start time for all subjects";
-          }
-        } catch {
-          return "Invalid time format";
-        }
-      }
-    }
+    // Convert time objects to strings for submission
+    const processedSubjects = formData.subjects.map(subject => ({
+      ...subject,
+      startTime: formatTimeForDisplay(subject.startTime),
+      endTime: formatTimeForDisplay(subject.endTime)
+    }));
 
-    return null;
-  }, [formData]);
-
-  const handleSubmit = useCallback(async (e) => {
-  e.preventDefault();
-  
-  const validationError = validateForm();
-  if (validationError) {
-    setError(validationError);
-    return;
-  }
-
-  setSubmitting(true);
-  setError('');
-  
-  try {
-    // Process subjects to ensure correct time format
-    const processedSubjects = formData.subjects.map(subject => {
-      const processedSubject = { ...subject };
-      
-      // Ensure startTime and endTime are separate fields, not concatenated
-      if (subject.startTime && subject.endTime) {
-        // Parse and format times properly
-        try {
-          const startDate = new Date(subject.startTime);
-          const endDate = new Date(subject.endTime);
-          
-          if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-            processedSubject.startTime = startDate.toISOString();
-            processedSubject.endTime = endDate.toISOString();
-          } else {
-            // Remove invalid times
-            delete processedSubject.startTime;
-            delete processedSubject.endTime;
-          }
-        } catch (err) {
-          console.error('Time processing error:', err);
-          delete processedSubject.startTime;
-          delete processedSubject.endTime;
-        }
-      }
-      
-      return processedSubject;
-    });
-
-    const submitData = {
+    onSubmit({
       ...formData,
       subjects: processedSubjects,
       startDate: formData.startDate.toISOString(),
       endDate: formData.endDate.toISOString(),
       nonWorkingDays: formData.nonWorkingDays.map(d => d.toISOString())
-    };
-
-    console.log('Submitting data:', submitData); // Debug log to check format
-
-    await onSubmit(submitData);
-    onClose();
-  } catch (err) {
-    console.error('Submit error:', err);
-    setError(err.response?.data?.error || err.message || 'Failed to save exam. Please try again.');
-  } finally {
-    setSubmitting(false);
-  }
-}, [formData, validateForm, onSubmit, onClose]);
-
-  const handleRoomsChange = useCallback((e) => {
-    const rooms = e.target.value
-      .split(",")
-      .map((r) => r.trim())
-      .filter(Boolean);
-    setFormData((prev) => ({ ...prev, availableRooms: rooms }));
-  }, []);
-
-  const handleMaxExamsChange = useCallback((e) => {
-    const value = parseInt(e.target.value) || 1;
-    setFormData((prev) => ({ ...prev, maxExamsPerDay: Math.max(1, value) }));
-  }, []);
+    });
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -680,20 +593,15 @@ const handleChange = useCallback((e) => {
           {examData ? "Edit Exam Schedule" : "Create New Exam Schedule"}
         </DialogTitle>
         <DialogContent dividers>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          {Object.keys(timeErrors).length > 0 && (
-            <Alert severity="warning" sx={{ mb: 2 }}>
-              <Typography variant="body2" component="div">
-                {Object.values(timeErrors).map((error, index) => (
-                  <div key={index}>• {error}</div>
-                ))}
-              </Typography>
-            </Alert>
+          {/* Warnings */}
+          {warnings.length > 0 && (
+            <Box mb={2}>
+              {warnings.map((warning, index) => (
+                <Alert key={index} severity="warning" sx={{ mb: 1 }}>
+                  {warning}
+                </Alert>
+              ))}
+            </Box>
           )}
 
           <form onSubmit={handleSubmit}>
@@ -707,7 +615,6 @@ const handleChange = useCallback((e) => {
                   value={formData.examName}
                   onChange={handleChange}
                   required
-                  error={!formData.examName.trim() && submitting}
                 />
               </Grid>
 
@@ -739,11 +646,6 @@ const handleChange = useCallback((e) => {
                     value={formData.customExamType}
                     onChange={handleChange}
                     required
-                    error={
-                      formData.examType === "Other" &&
-                      !formData.customExamType.trim() &&
-                      submitting
-                    }
                   />
                 </Grid>
               )}
@@ -752,12 +654,13 @@ const handleChange = useCallback((e) => {
                 <DatePicker
                   label="Start Date"
                   value={formData.startDate}
-                  onChange={(newValue) =>
-                    handleDateChange(newValue, "startDate")
-                  }
-                  renderInput={(params) => (
-                    <TextField fullWidth {...params} required />
-                  )}
+                  onChange={(newValue) => handleDateChange(newValue, "startDate")}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true
+                    }
+                  }}
                 />
               </Grid>
 
@@ -767,9 +670,12 @@ const handleChange = useCallback((e) => {
                   value={formData.endDate}
                   onChange={(newValue) => handleDateChange(newValue, "endDate")}
                   minDate={formData.startDate}
-                  renderInput={(params) => (
-                    <TextField fullWidth {...params} required />
-                  )}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true
+                    }
+                  }}
                 />
               </Grid>
 
@@ -780,7 +686,7 @@ const handleChange = useCallback((e) => {
                   label="Max Exams Per Day"
                   name="maxExamsPerDay"
                   value={formData.maxExamsPerDay}
-                  onChange={handleMaxExamsChange}
+                  onChange={handleChange}
                   inputProps={{ min: 1 }}
                 />
               </Grid>
@@ -812,9 +718,7 @@ const handleChange = useCallback((e) => {
                         onChange={() => handleClassToggle(cls._id)}
                       />
                     }
-                    label={`${cls.name || "Unknown"} - ${
-                      cls.division || "Unknown"
-                    }`}
+                    label={`${cls.name || "Unknown"} - ${cls.division || "Unknown"}`}
                   />
                 ))}
               </FormGroup>
@@ -892,17 +796,14 @@ const handleChange = useCallback((e) => {
 
                                   {isSelected && selectedSubject && (
                                     <Grid container spacing={1} mt={0.5}>
-                                      <Grid item xs={12} sm={3}>
+                                      <Grid item xs={12} sm={2.4}>
                                         <TextField
                                           fullWidth
                                           type="number"
                                           label="Total Marks"
-                                          value={
-                                            selectedSubject.totalMarks || ""
-                                          }
+                                          value={selectedSubject.totalMarks || ""}
                                           onChange={(e) => {
-                                            const value =
-                                              parseInt(e.target.value) || 0;
+                                            const value = parseInt(e.target.value) || 0;
                                             updateSubjectDetails(
                                               classId,
                                               subject._id,
@@ -915,107 +816,56 @@ const handleChange = useCallback((e) => {
                                         />
                                       </Grid>
 
-                                      <Grid item xs={12} sm={3}>
+                                      <Grid item xs={12} sm={2.4}>
                                         <TimePicker
                                           label="Start Time"
-                                          value={
-                                            selectedSubject.startTime
-                                              ? new Date(
-                                                  selectedSubject.startTime
-                                                )
-                                              : null
-                                          }
+                                          value={selectedSubject.startTime}
                                           onChange={(newValue) =>
-                                            handleTimeChange(
+                                            updateSubjectDetails(
                                               classId,
                                               subject._id,
                                               "startTime",
                                               newValue
                                             )
                                           }
-                                          renderInput={(params) => (
-                                            <TextField
-                                              fullWidth
-                                              {...params}
-                                              error={
-                                                !!timeErrors[
-                                                  `${classId}-${subject._id}-startTime`
-                                                ]
-                                              }
-                                              helperText={
-                                                timeErrors[
-                                                  `${classId}-${subject._id}-startTime`
-                                                ] || ""
-                                              }
-                                            />
-                                          )}
+                                          slotProps={{
+                                            textField: {
+                                              fullWidth: true,
+                                            }
+                                          }}
                                         />
                                       </Grid>
 
-                                      <Grid item xs={12} sm={3}>
+                                      <Grid item xs={12} sm={2.4}>
                                         <TimePicker
                                           label="End Time"
-                                          value={
-                                            selectedSubject.endTime
-                                              ? new Date(
-                                                  selectedSubject.endTime
-                                                )
-                                              : null
-                                          }
+                                          value={selectedSubject.endTime}
                                           onChange={(newValue) =>
-                                            handleTimeChange(
+                                            updateSubjectDetails(
                                               classId,
                                               subject._id,
                                               "endTime",
                                               newValue
                                             )
                                           }
-                                          renderInput={(params) => (
-                                            <TextField
-                                              fullWidth
-                                              {...params}
-                                              error={
-                                                !!timeErrors[
-                                                  `${classId}-${subject._id}-endTime`
-                                                ]
-                                              }
-                                              helperText={
-                                                timeErrors[
-                                                  `${classId}-${subject._id}-endTime`
-                                                ] || ""
-                                              }
-                                            />
-                                          )}
+                                          slotProps={{
+                                            textField: {
+                                              fullWidth: true,
+                                            }
+                                          }}
                                         />
                                       </Grid>
 
-                                      <Grid item xs={12} sm={3}>
+                                      <Grid item xs={12} sm={2.4}>
                                         <TextField
                                           fullWidth
-                                          type="number"
                                           label="Duration (hrs)"
-                                          value={
-                                            selectedSubject.durationHours || ""
-                                          }
-                                          InputProps={{ readOnly: true }}
-                                          error={
-                                            !!timeErrors[
-                                              `${classId}-${subject._id}-duration`
-                                            ]
-                                          }
-                                          helperText={
-                                            timeErrors[
-                                              `${classId}-${subject._id}-duration`
-                                            ] ||
-                                            (selectedSubject.startTime &&
-                                            selectedSubject.endTime &&
-                                            new Date(selectedSubject.endTime) <
-                                              new Date(
-                                                selectedSubject.startTime
-                                              )
-                                              ? "Next day exam"
-                                              : "Auto-calculated")
-                                          }
+                                          value={selectedSubject.durationHours || ""}
+                                          InputProps={{
+                                            readOnly: true,
+                                          }}
+                                          helperText="Auto-calculated"
+                                          variant="outlined"
                                         />
                                       </Grid>
                                     </Grid>
@@ -1039,23 +889,15 @@ const handleChange = useCallback((e) => {
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={onClose} disabled={submitting}>
+          <Button onClick={onClose}>
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             variant="contained"
             color="primary"
-            disabled={submitting}
-            startIcon={
-              submitting ? <CircularProgress size={20} color="inherit" /> : null
-            }
           >
-            {submitting
-              ? "Saving..."
-              : examData
-              ? "Update Exam"
-              : "Create Exam"}
+            {examData ? "Update Exam" : "Create Exam"}
           </Button>
         </DialogActions>
       </Dialog>
