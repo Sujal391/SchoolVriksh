@@ -25,17 +25,7 @@ const CertificatesPage = () => {
           </div>
         </div>
         
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div>Loading certificates...</div>
-          </div>
-        ) : error ? (
-          <div className="text-red-500 text-center bg-red-50 p-4 rounded">
-            Error: {error}
-          </div>
-        ) : (
-          <CertificateList certificates={allCertificates} />
-        )}
+        <CertificateList certificates={allCertificates} loading={loading} error={error} />
       </div>
     </ClerkLayout>
   );

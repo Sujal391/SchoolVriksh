@@ -121,7 +121,7 @@ import CertificateVerifier from '../../../components/clerk/certificates/Certific
 import CertificateDetail from '../../../components/clerk/certificates/CertificateDetail';
 import useClerk from '../../../hooks/useClerk';
 import { useEffect, useState } from 'react';
-import { Tab, Tabs, Box } from '@mui/material';
+import { Tab, Tabs, Box, CircularProgress } from '@mui/material';
 
 const CertificateDetailPage = () => {
   const router = useRouter();
@@ -144,26 +144,32 @@ const CertificateDetailPage = () => {
     }
   }, [id, certificates, pendingCertificates]);
 
-  if (!certificate) return <div>Loading...</div>;
-
   return (
     <ClerkLayout>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
-          <Tab label="Details" />
-          <Tab label="Generate" />
-          {/* <Tab label="Verify" /> */}
-        </Tabs>
-      </Box>
-      
-      {activeTab === 0 && <CertificateDetail certificate={certificate} />}
-      {activeTab === 1 && certificate.status === 'pending' && (
-        <CertificateGenerator 
-          certificateId={id} 
-          initialData={certificate}
-        />
+      {!certificate ? (
+        <Box display="flex" justifyContent="center" alignItems="center" py={4} gap={2}>
+          <CircularProgress size={20} /> <span>Loading certificate details...</span>
+        </Box>
+      ) : (
+        <>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+              <Tab label="Details" />
+              <Tab label="Generate" />
+              {/* <Tab label="Verify" /> */}
+            </Tabs>
+          </Box>
+          
+          {activeTab === 0 && <CertificateDetail certificate={certificate} />}
+          {activeTab === 1 && certificate.status === 'pending' && (
+            <CertificateGenerator 
+              certificateId={id} 
+              initialData={certificate}
+            />
+          )}
+          {activeTab === 2 && <CertificateVerifier />}
+        </>
       )}
-      {activeTab === 2 && <CertificateVerifier />}
     </ClerkLayout>
   );
 };

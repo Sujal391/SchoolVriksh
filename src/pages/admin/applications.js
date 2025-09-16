@@ -58,14 +58,6 @@ const ApplicationsPage = () => {
     fetchApplications();
   };
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   if (error) {
     return (
       <Box className="container mx-auto px-4 py-8">
@@ -138,7 +130,20 @@ const ApplicationsPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {applications.map((app) => (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  <CircularProgress /> <span>Loading applications...</span>
+                </TableCell>
+              </TableRow>
+            ) : ( applications.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  No applications found
+                </TableCell>
+              </TableRow>
+            ) : (
+            applications.map((app) => (
               <TableRow key={app.trackingId}>
                 <TableCell>{app.trackingId}</TableCell>
                 <TableCell>{app.studentDetails.name}</TableCell>
@@ -148,7 +153,8 @@ const ApplicationsPage = () => {
                 <TableCell>{app.paymentStatus}</TableCell>
                 <TableCell>{new Date(app.createdAt).toLocaleDateString()}</TableCell>
               </TableRow>
-            ))}
+            ))
+          ))}
           </TableBody>
         </Table>
       </TableContainer>

@@ -1801,6 +1801,10 @@ import {
   CardActions,
   Fade,
   Zoom,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import {
   MoreVert as MoreIcon,
@@ -1827,6 +1831,8 @@ import {
   FamilyRestroom as FamilyIcon,
   DirectionsCar as CarIcon,
   AdminPanelSettings as AdminIcon,
+  Visibility as VisibilityIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { useState } from "react";
 import ClassUpgradeForm from "./ClassUpgradeForm";
@@ -1841,18 +1847,14 @@ const StudentList = ({
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
 
-  const [expandedStudent, setExpandedStudent] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   const open = Boolean(anchorEl);
 
   // Event Handlers
-  const handleExpandClick = (studentId) => {
-    setExpandedStudent(expandedStudent === studentId ? null : studentId);
-  };
-
   const handleMenuClick = (event, student) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
@@ -1865,6 +1867,11 @@ const StudentList = ({
 
   const handleUpgradeClick = () => {
     setUpgradeDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleViewDetailsClick = () => {
+    setDetailsDialogOpen(true);
     handleMenuClose();
   };
 
@@ -2175,45 +2182,6 @@ const StudentList = ({
             </Grid>
           </Grid>
         </CardContent>
-
-        {/* Action Area */}
-        <CardActions
-          sx={{
-            justifyContent: "center",
-            bgcolor: "action.hover",
-            borderTop: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Button
-            onClick={() => handleExpandClick(student.id)}
-            startIcon={expandedStudent === student.id ? <CollapseIcon /> : <ExpandIcon />}
-            sx={{
-              fontWeight: "bold",
-              borderRadius: 2,
-              "&:hover": {
-                bgcolor: "primary.main",
-                color: "primary.contrastText",
-              },
-            }}
-          >
-            {expandedStudent === student.id ? "Hide Details" : "View Details"}
-          </Button>
-        </CardActions>
-
-        {/* Expanded Details */}
-        <Collapse in={expandedStudent === student.id} timeout="auto" unmountOnExit>
-          <Box
-            sx={{
-              p: 3,
-              bgcolor: "background.default",
-              borderTop: "1px solid",
-              borderColor: "divider",
-            }}
-          >
-            {renderExpandedContent(student)}
-          </Box>
-        </Collapse>
       </Card>
     </Zoom>
   );
@@ -2246,286 +2214,314 @@ const StudentList = ({
           </Typography>
         </Box>
 
-        <Grid container spacing={3}>
-          {/* Personal Information */}
-          <Grid item xs={12} lg={4}>
-            <Card
+        {/* Personal Information */}
+        <Card
+          sx={{
+            borderRadius: 3,
+            background: `linear-gradient(135deg, ${theme.palette.info.main}05, ${theme.palette.info.main}15)`,
+            border: "1px solid",
+            borderColor: "info.200",
+          }}
+        >
+          <CardContent sx={{ p: 3 }}>
+            <Box
               sx={{
-                height: "100%",
-                borderRadius: 3,
-                background: `linear-gradient(135deg, ${theme.palette.info.main}05, ${theme.palette.info.main}15)`,
-                border: "1px solid",
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                mb: 3,
+                pb: 2,
+                borderBottom: "2px solid",
                 borderColor: "info.200",
               }}
             >
-              <CardContent sx={{ p: 3 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 3,
-                    pb: 2,
-                    borderBottom: "2px solid",
-                    borderColor: "info.200",
-                  }}
-                >
-                  <PersonIcon sx={{ color: "info.main", fontSize: 24 }} />
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: "bold",
-                      color: "info.main",
-                    }}
-                  >
-                    Personal Information
-                  </Typography>
-                </Box>
-
+              <PersonIcon sx={{ color: "info.main", fontSize: 24 }} />
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  color: "info.main",
+                }}
+              >
+                Personal Information
+              </Typography>
+            </Box>
+            <Grid container spacing={2}>
+              <Grid item xs={6} sm={3}>
                 <DetailItem
                   icon={<BadgeIcon fontSize="small" />}
                   label="GR Number"
                   value={student.grNumber}
                 />
+              </Grid>
+              <Grid item xs={6} sm={3}>
                 <DetailItem
                   icon={<CalendarIcon fontSize="small" />}
                   label="Date of Birth"
                   value={formatDate(student.dob)}
                 />
+              </Grid>
+              <Grid item xs={6} sm={3}>
                 <DetailItem
                   icon={<PersonIcon fontSize="small" />}
                   label="Gender"
                   value={getGenderDisplay(student.gender)}
                 />
+              </Grid>
+              <Grid item xs={6} sm={3}>
                 <DetailItem
                   icon={<EmailIcon fontSize="small" />}
                   label="Email"
                   value={student.email}
                 />
+              </Grid>
+              <Grid item xs={6} sm={3}>
                 <DetailItem
                   icon={<PhoneIcon fontSize="small" />}
                   label="Mobile"
                   value={student.mobile}
                 />
+              </Grid>
+              <Grid item xs={6} sm={3}>
                 <DetailItem
                   icon={<SchoolIcon fontSize="small" />}
                   label="Religion"
                   value={student.religion}
                 />
+              </Grid>
+              <Grid item xs={6} sm={3}>
                 <DetailItem
                   icon={<SchoolIcon fontSize="small" />}
                   label="Caste"
                   value={student.caste}
                 />
+              </Grid>
+              <Grid item xs={6} sm={3}>
                 <DetailItem
                   icon={<SchoolIcon fontSize="small" />}
                   label="Sub-Caste"
                   value={student.subCaste}
                 />
+              </Grid>
+              <Grid item xs={6} sm={3}>
                 <DetailItem
                   icon={<BadgeIcon fontSize="small" />}
                   label="UID Number"
                   value={student.uidNumber}
                 />
+              </Grid>
+              <Grid item xs={6} sm={3}>
                 <DetailItem
                   icon={<BadgeIcon fontSize="small" />}
                   label="Aadhar Number"
                   value={student.aadharNumber}
                 />
+              </Grid>
+              <Grid item xs={6} sm={3}>
                 <DetailItem
                   icon={<CalendarIcon fontSize="small" />}
                   label="Admission Date"
                   value={formatDate(student.admissionDate)}
                 />
-              </CardContent>
-            </Card>
-          </Grid>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
 
-          {/* Parent Information */}
-          <Grid item xs={12} lg={4}>
-            <Card
+        {/* Parent Information */}
+        <Card
+          sx={{
+            mt: 3,
+            borderRadius: 3,
+            background: `linear-gradient(135deg, ${theme.palette.success.main}05, ${theme.palette.success.main}15)`,
+            border: "1px solid",
+            borderColor: "success.200",
+          }}
+        >
+          <CardContent sx={{ p: 3 }}>
+            <Box
               sx={{
-                height: "100%",
-                borderRadius: 3,
-                background: `linear-gradient(135deg, ${theme.palette.success.main}05, ${theme.palette.success.main}15)`,
-                border: "1px solid",
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                mb: 3,
+                pb: 2,
+                borderBottom: "2px solid",
                 borderColor: "success.200",
               }}
             >
-              <CardContent sx={{ p: 3 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 3,
-                    pb: 2,
-                    borderBottom: "2px solid",
-                    borderColor: "success.200",
-                  }}
-                >
-                  <FamilyIcon sx={{ color: "success.main", fontSize: 24 }} />
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: "bold",
-                      color: "success.main",
-                    }}
-                  >
-                    Parent Information
-                  </Typography>
-                </Box>
+              <FamilyIcon sx={{ color: "success.main", fontSize: 24 }} />
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  color: "success.main",
+                }}
+              >
+                Parent Information
+              </Typography>
+            </Box>
 
-                {student.parentDetails ? (
-                  <>
-                    <DetailItem
-                      icon={<PersonIcon fontSize="small" />}
-                      label="Parent Name"
-                      value={student.parentDetails.name}
-                    />
-                    <DetailItem
-                      icon={<EmailIcon fontSize="small" />}
-                      label="Parent Email"
-                      value={student.parentDetails.email}
-                    />
-                    <DetailItem
-                      icon={<PhoneIcon fontSize="small" />}
-                      label="Parent Mobile"
-                      value={student.parentDetails.mobile}
-                    />
-                    <DetailItem
-                      icon={<WorkIcon fontSize="small" />}
-                      label="Occupation"
-                      value={student.parentDetails.occupation}
-                    />
-                    <DetailItem
-                      icon={<BadgeIcon fontSize="small" />}
-                      label="Parent Aadhar Number"
-                      value={student.parentDetails.aadharNumber}
-                    />
-                  </>
-                ) : (
-                  <Alert
-                    severity="info"
-                    sx={{
-                      borderRadius: 2,
-                      bgcolor: "info.50",
-                      border: "1px solid",
-                      borderColor: "info.200",
-                    }}
-                    icon={<InfoIcon />}
-                  >
-                    No parent information available
-                  </Alert>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
+            {student.parentDetails ? (
+              <Grid container spacing={2}>
+                <Grid item xs={6} sm={3}>
+                  <DetailItem
+                    icon={<PersonIcon fontSize="small" />}
+                    label="Parent Name"
+                    value={student.parentDetails.name}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <DetailItem
+                    icon={<EmailIcon fontSize="small" />}
+                    label="Parent Email"
+                    value={student.parentDetails.email}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <DetailItem
+                    icon={<PhoneIcon fontSize="small" />}
+                    label="Parent Mobile"
+                    value={student.parentDetails.mobile}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <DetailItem
+                    icon={<WorkIcon fontSize="small" />}
+                    label="Occupation"
+                    value={student.parentDetails.occupation}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <DetailItem
+                    icon={<BadgeIcon fontSize="small" />}
+                    label="Parent Aadhar Number"
+                    value={student.parentDetails.aadharNumber}
+                  />
+                </Grid>
+              </Grid>
+            ) : (
+              <Alert
+                severity="info"
+                sx={{
+                  borderRadius: 2,
+                  bgcolor: "info.50",
+                  border: "1px solid",
+                  borderColor: "info.200",
+                }}
+                icon={<InfoIcon />}
+              >
+                No parent information available
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Transport Information */}
-          <Grid item xs={12} lg={4}>
-            <Card
+        {/* Transport Information */}
+        <Card
+          sx={{
+            mt: 3,
+            borderRadius: 3,
+            background: `linear-gradient(135deg, ${theme.palette.warning.main}05, ${theme.palette.warning.main}15)`,
+            border: "1px solid",
+            borderColor: "warning.200",
+          }}
+        >
+          <CardContent sx={{ p: 3 }}>
+            <Box
               sx={{
-                height: "100%",
-                borderRadius: 3,
-                background: `linear-gradient(135deg, ${theme.palette.warning.main}05, ${theme.palette.warning.main}15)`,
-                border: "1px solid",
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                mb: 3,
+                pb: 2,
+                borderBottom: "2px solid",
                 borderColor: "warning.200",
               }}
             >
-              <CardContent sx={{ p: 3 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 3,
-                    pb: 2,
-                    borderBottom: "2px solid",
-                    borderColor: "warning.200",
-                  }}
-                >
-                  <CarIcon sx={{ color: "warning.main", fontSize: 24 }} />
-                  <Typography
-                    variant="h6"
+              <CarIcon sx={{ color: "warning.main", fontSize: 24 }} />
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  color: "warning.main",
+                }}
+              >
+                Transport Details
+              </Typography>
+            </Box>
+
+            {student.transportDetails ? (
+              <>
+                <Box sx={{ mb: 3, textAlign: "center" }}>
+                  <Chip
+                    label={
+                      student.transportDetails.isApplicable
+                        ? "Transport Required"
+                        : "No Transport"
+                    }
+                    size="medium"
+                    color={
+                      student.transportDetails.isApplicable
+                        ? "success"
+                        : "default"
+                    }
+                    variant="filled"
                     sx={{
                       fontWeight: "bold",
-                      color: "warning.main",
+                      fontSize: "0.875rem",
+                      px: 2,
+                      py: 1,
                     }}
-                  >
-                    Transport Details
-                  </Typography>
+                    icon={
+                      student.transportDetails.isApplicable ? (
+                        <TransportIcon />
+                      ) : (
+                        <PersonIcon />
+                      )
+                    }
+                  />
                 </Box>
 
-                {student.transportDetails ? (
-                  <>
-                    <Box sx={{ mb: 3, textAlign: "center" }}>
-                      <Chip
-                        label={
-                          student.transportDetails.isApplicable
-                            ? "Transport Required"
-                            : "No Transport"
-                        }
-                        size="medium"
-                        color={
-                          student.transportDetails.isApplicable
-                            ? "success"
-                            : "default"
-                        }
-                        variant="filled"
-                        sx={{
-                          fontWeight: "bold",
-                          fontSize: "0.875rem",
-                          px: 2,
-                          py: 1,
-                        }}
-                        icon={
-                          student.transportDetails.isApplicable ? (
-                            <TransportIcon />
-                          ) : (
-                            <PersonIcon />
-                          )
+                {student.transportDetails.isApplicable && (
+                  <Grid container spacing={2}>
+                    <Grid item xs={6} sm={3}>
+                      <DetailItem
+                        icon={<LocationIcon fontSize="small" />}
+                        label="Distance"
+                        value={
+                          student.transportDetails.distance
+                            ? `${student.transportDetails.distance} km`
+                            : "Not specified"
                         }
                       />
-                    </Box>
-
-                    {student.transportDetails.isApplicable && (
-                      <>
-                        <DetailItem
-                          icon={<LocationIcon fontSize="small" />}
-                          label="Distance"
-                          value={
-                            student.transportDetails.distance
-                              ? `${student.transportDetails.distance} km`
-                              : "Not specified"
-                          }
-                        />
-                        <DetailItem
-                          icon={<TransportIcon fontSize="small" />}
-                          label="Distance Slab"
-                          value={student.transportDetails.distanceSlab}
-                        />
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <Alert
-                    severity="info"
-                    sx={{
-                      borderRadius: 2,
-                      bgcolor: "info.50",
-                      border: "1px solid",
-                      borderColor: "info.200",
-                    }}
-                    icon={<InfoIcon />}
-                  >
-                    No transport information available
-                  </Alert>
+                    </Grid>
+                    <Grid item xs={6} sm={3}>
+                      <DetailItem
+                        icon={<TransportIcon fontSize="small" />}
+                        label="Distance Slab"
+                        value={student.transportDetails.distanceSlab}
+                      />
+                    </Grid>
+                  </Grid>
                 )}
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+              </>
+            ) : (
+              <Alert
+                severity="info"
+                sx={{
+                  borderRadius: 2,
+                  bgcolor: "info.50",
+                  border: "1px solid",
+                  borderColor: "info.200",
+                }}
+                icon={<InfoIcon />}
+              >
+                No transport information available
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Additional Information */}
         <Card
@@ -2691,7 +2687,7 @@ const StudentList = ({
               color: "primary.main",
             }}
           >
-            Students Directory ({students.length})
+            Students Directory
           </Typography>
           {students.map((student, index) => (
             <MobileStudentCard
@@ -2713,7 +2709,7 @@ const StudentList = ({
               textAlign: "center",
             }}
           >
-            Students Directory ({students.length})
+            Students Directory
           </Typography>
           <TableContainer
             component={Paper}
@@ -2739,7 +2735,6 @@ const StudentList = ({
                     },
                   }}
                 >
-                  <TableCell sx={{ width: 48 }} />
                   <TableCell sx={{ width: 90 }}>S. No.</TableCell>
                   <TableCell sx={{ minWidth: 120 }}>GR Number</TableCell>
                   <TableCell sx={{ minWidth: 200 }}>Student</TableCell>
@@ -2751,226 +2746,176 @@ const StudentList = ({
               </TableHead>
               <TableBody>
                 {students.map((student, index) => (
-                  <>
-                    <TableRow
-                      key={student.id}
-                      hover
-                      sx={{
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
-                        "&:hover": {
-                          bgcolor: "action.hover",
-                          transform: "translateY(-1px)",
-                          boxShadow: 2,
-                        },
-                      }}
-                      onClick={() => handleExpandClick(student.id)}
-                    >
-                      <TableCell>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleExpandClick(student.id);
-                          }}
+                  <TableRow
+                    key={student.id}
+                    hover
+                    sx={{
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        bgcolor: "action.hover",
+                        transform: "translateY(-1px)",
+                        boxShadow: 2,
+                      },
+                    }}
+                  >
+                    <TableCell>
+                      <Chip
+                        label={index + 1}
+                        size="small"
+                        color="primary"
+                        variant="filled"
+                        sx={{
+                          fontWeight: "bold",
+                          minWidth: 32,
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <BadgeIcon fontSize="small" color="action" />
+                        <Typography
+                          variant="body2"
+                          fontWeight="bold"
                           sx={{
-                            bgcolor: "primary.50",
-                            "&:hover": {
-                              bgcolor: "primary.main",
-                              color: "primary.contrastText",
-                            },
+                            color: student.grNumber ? "text.primary" : "text.secondary",
                           }}
                         >
-                          {expandedStudent === student.id ? (
-                            <CollapseIcon />
-                          ) : (
-                            <ExpandIcon />
-                          )}
-                        </IconButton>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={index + 1}
-                          size="small"
-                          color="primary"
-                          variant="filled"
-                          sx={{
-                            fontWeight: "bold",
-                            minWidth: 32,
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                          }}
-                        >
-                          <BadgeIcon fontSize="small" color="action" />
-                          <Typography
-                            variant="body2"
-                            fontWeight="bold"
+                          {student.grNumber || "Not assigned"}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
+                        <Box sx={{ position: "relative" }}>
+                          <Avatar
                             sx={{
-                              color: student.grNumber ? "text.primary" : "text.secondary",
+                              width: 48,
+                              height: 48,
+                              bgcolor: getAvatarColor(index),
+                              fontSize: "1.1rem",
+                              fontWeight: "bold",
+                              border: "2px solid white",
+                              boxShadow: 2,
                             }}
                           >
-                            {student.grNumber || "Not assigned"}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                        >
-                          <Box sx={{ position: "relative" }}>
-                            <Avatar
+                            {getInitials(student.name)}
+                          </Avatar>
+                          {student.isRTE && (
+                            <VerifiedIcon
                               sx={{
-                                width: 48,
-                                height: 48,
-                                bgcolor: getAvatarColor(index),
-                                fontSize: "1.1rem",
-                                fontWeight: "bold",
-                                border: "2px solid white",
-                                boxShadow: 2,
+                                position: "absolute",
+                                bottom: -4,
+                                right: -4,
+                                color: "success.main",
+                                bgcolor: "white",
+                                borderRadius: "50%",
+                                fontSize: 18,
                               }}
-                            >
-                              {getInitials(student.name)}
-                            </Avatar>
-                            {student.isRTE && (
-                              <VerifiedIcon
-                                sx={{
-                                  position: "absolute",
-                                  bottom: -4,
-                                  right: -4,
-                                  color: "success.main",
-                                  bgcolor: "white",
-                                  borderRadius: "50%",
-                                  fontSize: 18,
-                                }}
-                              />
-                            )}
-                          </Box>
-                          <Box sx={{ minWidth: 0, flex: 1 }}>
+                            />
+                          )}
+                        </Box>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography
+                            variant="subtitle2"
+                            fontWeight="bold"
+                            sx={{
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              mb: 0.5,
+                            }}
+                          >
+                            {student.name || "Unknown Student"}
+                          </Typography>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            <EmailIcon fontSize="small" color="action" />
                             <Typography
-                              variant="subtitle2"
-                              fontWeight="bold"
+                              variant="caption"
+                              color="text.secondary"
                               sx={{
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
-                                mb: 0.5,
                               }}
                             >
-                              {student.name || "Unknown Student"}
+                              {student.email || "No email"}
                             </Typography>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                              <EmailIcon fontSize="small" color="action" />
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {student.email || "No email"}
-                              </Typography>
-                            </Box>
                           </Box>
                         </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        <Chip
+                          label={student.admissionType || "Regular"}
+                          size="small"
+                          color={getAdmissionTypeColor(student.admissionType)}
+                          variant="filled"
+                          sx={{
+                            fontWeight: "bold",
+                            borderRadius: 2,
+                          }}
+                        />
+                        {student.isRTE && (
                           <Chip
-                            label={student.admissionType || "Regular"}
+                            icon={<StarIcon fontSize="small" />}
+                            label="RTE"
                             size="small"
-                            color={getAdmissionTypeColor(student.admissionType)}
+                            color="success"
                             variant="filled"
                             sx={{
                               fontWeight: "bold",
                               borderRadius: 2,
                             }}
                           />
-                          {student.isRTE && (
-                            <Chip
-                              icon={<StarIcon fontSize="small" />}
-                              label="RTE"
-                              size="small"
-                              color="success"
-                              variant="filled"
-                              sx={{
-                                fontWeight: "bold",
-                                borderRadius: 2,
-                              }}
-                            />
-                          )}
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <PersonIcon fontSize="small" color="action" />
-                          <Typography variant="body2" fontWeight="500">
-                            {getGenderDisplay(student.gender)}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <ContactPhoneIcon fontSize="small" color="action" />
-                          <Typography variant="body2" fontWeight="500">
-                            {student.mobile || "Not provided"}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Tooltip title="More actions">
-                          <IconButton
-                            onClick={(e) => handleMenuClick(e, student)}
-                            size="small"
-                            sx={{
-                              bgcolor: "action.hover",
-                              "&:hover": {
-                                bgcolor: "primary.main",
-                                color: "primary.contrastText",
-                                transform: "scale(1.1)",
-                              },
-                              transition: "all 0.2s ease",
-                            }}
-                          >
-                            <MoreIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell
-                        style={{ paddingBottom: 0, paddingTop: 0 }}
-                        colSpan={8}
-                      >
-                        <Collapse
-                          in={expandedStudent === student.id}
-                          timeout="auto"
-                          unmountOnExit
+                        )}
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <PersonIcon fontSize="small" color="action" />
+                        <Typography variant="body2" fontWeight="500">
+                          {getGenderDisplay(student.gender)}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <ContactPhoneIcon fontSize="small" color="action" />
+                        <Typography variant="body2" fontWeight="500">
+                          {student.mobile || "Not provided"}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="More actions">
+                        <IconButton
+                          onClick={(e) => handleMenuClick(e, student)}
+                          size="small"
+                          sx={{
+                            bgcolor: "action.hover",
+                            "&:hover": {
+                              bgcolor: "primary.main",
+                              color: "primary.contrastText",
+                              transform: "scale(1.1)",
+                            },
+                            transition: "all 0.2s ease",
+                          }}
                         >
-                          <Box
-                            sx={{
-                              margin: 3,
-                              p: 3,
-                              borderRadius: 3,
-                              bgcolor: "background.default",
-                              border: "1px solid",
-                              borderColor: "divider",
-                            }}
-                          >
-                            {renderExpandedContent(student)}
-                          </Box>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
-                  </>
+                          <MoreIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
                 ))}
               </TableBody>
             </Table>
@@ -3015,11 +2960,99 @@ const StudentList = ({
           },
         }}
       >
+        <MenuItem onClick={handleViewDetailsClick} sx={{ gap: 1.5 }}>
+          <VisibilityIcon fontSize="small" />
+          View Details
+        </MenuItem>
         <MenuItem onClick={handleUpgradeClick} sx={{ gap: 1.5 }}>
           <UpgradeIcon fontSize="small" />
           Upgrade Class
         </MenuItem>
       </Menu>
+
+      {/* Student Details Dialog */}
+      <Dialog
+        open={detailsDialogOpen}
+        onClose={() => setDetailsDialogOpen(false)}
+        maxWidth="lg"
+        fullWidth
+        fullScreen={isMobile}
+        PaperProps={{
+          sx: {
+            borderRadius: isMobile ? 0 : 3,
+            maxHeight: "90vh",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 2,
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            bgcolor: "primary.main",
+            color: "primary.contrastText",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Avatar
+              sx={{
+                bgcolor: "primary.contrastText",
+                color: "primary.main",
+                width: 40,
+                height: 40,
+              }}
+            >
+              {getInitials(selectedStudent?.name)}
+            </Avatar>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                {selectedStudent?.name || "Student Details"}
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                GR: {selectedStudent?.grNumber || "Not assigned"}
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton
+            onClick={() => setDetailsDialogOpen(false)}
+            sx={{
+              color: "primary.contrastText",
+              "&:hover": {
+                bgcolor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          {selectedStudent && renderExpandedContent(selectedStudent)}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            borderTop: "1px solid",
+            borderColor: "divider",
+            p: 2,
+            justifyContent: "center",
+          }}
+        >
+          <Button
+            onClick={() => setDetailsDialogOpen(false)}
+            variant="contained"
+            sx={{
+              borderRadius: 2,
+              px: 4,
+              py: 1.5,
+              fontWeight: "bold",
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {selectedStudent && (
         <ClassUpgradeForm

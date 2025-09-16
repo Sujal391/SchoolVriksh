@@ -212,7 +212,7 @@ const ClerkSidebar = ({ open, onClose, variant, sx, logoSrc }) => {
       text: 'Admissions', 
       icon: <AdmissionsIcon />, 
       path: '/clerk/admissions',
-      badge: {  color: 'primary' },
+      badge: null,
       subItems: [
         { text: 'New Applications', path: '/clerk/admissions' },
         { text: 'Admission History', path: '/clerk/admissions/admission-history' }
@@ -222,7 +222,7 @@ const ClerkSidebar = ({ open, onClose, variant, sx, logoSrc }) => {
       text: 'Certificates', 
       icon: <CertificatesIcon />, 
       path: '/clerk/certificates',
-      badge: { color: 'success' }
+      badge: null
     },
     { 
       text: 'Students', 
@@ -234,7 +234,7 @@ const ClerkSidebar = ({ open, onClose, variant, sx, logoSrc }) => {
       text: 'Leave Requests', 
       icon: <LeaveRequestsIcon />, 
       path: '/clerk/leaves',
-      badge: { color: 'warning' }
+      badge: null
     },
     { 
       text: 'RTE Reports', 

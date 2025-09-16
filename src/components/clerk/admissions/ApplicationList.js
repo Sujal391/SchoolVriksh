@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, CircularProgress, Box } from '@mui/material';
 import Link from 'next/link';
 
 const statusColors = {
@@ -13,7 +13,6 @@ const statusColors = {
 };
 
 const ApplicationList = ({ applications, loading }) => {
-  if (loading) return <div>Loading applications...</div>;
 
   return (
     <TableContainer component={Paper}>
@@ -30,7 +29,28 @@ const ApplicationList = ({ applications, loading }) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {applications.map((app) => (
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={7} align="center">
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  py={2}
+                >
+                  <CircularProgress size={20} />
+                  <Box ml={2}>Loading Applications...</Box>
+                </Box>
+              </TableCell>
+            </TableRow>
+          ) : ( applications.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} align="center">
+                No applications found
+              </TableCell>
+            </TableRow>
+          ) : (
+          applications.map((app) => (
             <TableRow key={app.id}>
               <TableCell>{app.trackingId}</TableCell>
               <TableCell>{app.studentDetails.name}</TableCell>
@@ -50,7 +70,8 @@ const ApplicationList = ({ applications, loading }) => {
                 </Link>
               </TableCell>
             </TableRow>
-          ))}
+          )))
+        )}
         </TableBody>
       </Table>
     </TableContainer>

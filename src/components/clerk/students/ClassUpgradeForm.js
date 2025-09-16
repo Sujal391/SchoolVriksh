@@ -120,8 +120,11 @@ const ClassUpgradeForm = ({
                 <InputLabel>Select New Class</InputLabel>
                 <Select
                   value={newClassId}
+                  size="small"
                   onChange={(e) => setNewClassId(e.target.value)}
+                  sx={{ minWidth: 200 }}
                   label="Select New Class"
+                  // name="newClassId"
                 >
                   {classes
                     .filter(cls => cls._id !== student.classId)
