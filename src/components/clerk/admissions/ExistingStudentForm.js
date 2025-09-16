@@ -631,7 +631,7 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
       )}
 
       {/* Student Information Section */}
-      <Card sx={{ mb: 3 }}>
+      {/* <Card sx={{ mb: 3 }}> */}
         <CardContent>
           <Typography variant="h5" gutterBottom color="primary" sx={{ mb: 3 }}>
             Student Information
@@ -693,6 +693,7 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
+                  sx={{ minWidth: 100 }}
                   label="Gender"
                 >
                   <MenuItem value="Male">Male</MenuItem>
@@ -743,6 +744,7 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
                   value={formData.classId}
                   onChange={handleChange}
                   label="Class"
+                  sx={{ minWidth: 100 }}
                 >
                   {classes.map((cls) => (
                     <MenuItem key={cls._id} value={cls._id}>
@@ -791,10 +793,10 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
             </Grid>
           </Grid>
         </CardContent>
-      </Card>
+      {/* </Card> */}
 
       {/* Student Personal Details Section */}
-      <Card sx={{ mb: 3 }}>
+      {/* <Card sx={{ mb: 3 }}> */}
         <CardContent>
           <Typography variant="h6" gutterBottom color="primary" sx={{ mb: 3 }}>
             Personal & Identity Details
@@ -842,14 +844,14 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
             <Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth
-                label="UID Number"
-                name="uidNumber"
+                label="UDIAS Number"
+                name="udiasNumber"
                 value={formData.uidNumber}
                 onChange={handleChange}
                 required
                 variant="outlined"
                 size="medium"
-                helperText={errors.uidNumber || "Unique Identification Number"}
+                helperText={errors.uidNumber || "11 digit UDIAS Number"}
                 error={!!errors.uidNumber}
               />
             </Grid>
@@ -870,10 +872,10 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
             </Grid>
           </Grid>
         </CardContent>
-      </Card>
+      {/* </Card> */}
 
       {/* Account Security Section */}
-      <Card sx={{ mb: 3 }}>
+      {/* <Card sx={{ mb: 3 }}> */}
         <CardContent>
           <Typography variant="h6" gutterBottom color="primary" sx={{ mb: 3 }}>
             Account Security
@@ -896,10 +898,10 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
             </Grid>
           </Grid>
         </CardContent>
-      </Card>
+      {/* </Card> */}
 
       {/* Parent Information Section */}
-      <Card sx={{ mb: 3 }}>
+      {/* <Card sx={{ mb: 3 }}> */}
         <CardContent>
           <Typography variant="h5" gutterBottom color="primary" sx={{ mb: 3 }}>
             Parent/Guardian Information
@@ -992,10 +994,10 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
             </Grid>
           </Grid>
         </CardContent>
-      </Card>
+      {/* </Card> */}
 
       {/* Address Information Section */}
-      <Card sx={{ mb: 4 }}>
+      {/* <Card sx={{ mb: 4 }}> */}
         <CardContent>
           <Typography variant="h6" gutterBottom color="primary" sx={{ mb: 3 }}>
             Address Information
@@ -1062,7 +1064,7 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
             </Grid>
           </Grid>
         </CardContent>
-      </Card>
+      {/* </Card> */}
 
       {/* Submit Button */}
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>

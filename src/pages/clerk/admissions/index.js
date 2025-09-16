@@ -82,14 +82,11 @@ const AdmissionsPage = () => {
           <Tab label="All Applications" value="all" />
         </Tabs>
 
-        {loading && <CircularProgress />}
         {error && <Alert severity="error">{error}</Alert>}
-        {!loading && !error && (
-          <ApplicationList 
-            applications={filteredApplications} 
-            loading={loading} 
-          />
-        )}
+        <ApplicationList 
+          applications={filteredApplications} 
+          loading={loading} 
+        />
       </Container>
     </ClerkLayout>
   );
