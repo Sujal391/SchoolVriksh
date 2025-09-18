@@ -17,6 +17,7 @@ import {
   InputLabel,
 } from "@mui/material";
 import { ROLE_COLORS } from "../../utils/constants";
+import EmptyState from "../common/EmptyState";
 
 const UserTable = ({
   users = [],
@@ -45,8 +46,6 @@ const UserTable = ({
               <TableCell>Name</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Role</TableCell>
-              <TableCell>Attendance Permissions</TableCell>
-              <TableCell>Marks Entry Permissions</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -54,24 +53,16 @@ const UserTable = ({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
-                  <Box
-                    display="flex"
-                    justifyContent="center"
-                    alignItems="center"
-                    gap={1}
-                  >
-                    <CircularProgress size={24} />
-                    Loading users...
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ) : users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No users found
-                </TableCell>
-              </TableRow>
+              <TableCell colSpan={4}>
+                <EmptyState loading loadingMessage="Loading users..." />
+              </TableCell>
+            </TableRow>
+          ) : users.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4}>
+                <EmptyState message="No users found" />
+              </TableCell>
+            </TableRow>
             ) : (
               users.map((user) => (
                 <TableRow key={user._id}>
@@ -90,29 +81,6 @@ const UserTable = ({
                     >
                       {user.role.toUpperCase()}
                     </span>
-                  </TableCell>
-                  <TableCell>
-                    {user.permissions?.canTakeAttendance?.length > 0
-                      ? user.permissions.canTakeAttendance.map((cls, idx) => (
-                          <span key={idx} style={{ marginRight: "4px" }}>
-                            {cls.name} {cls.division ? `(${cls.division})` : ""}
-                          </span>
-                        ))
-                      : "None"}
-                  </TableCell>
-                  <TableCell>
-                    {user.permissions?.canEnterMarks?.length > 0
-                      ? user.permissions.canEnterMarks.map((perm, idx) => (
-                          <span key={idx} style={{ marginRight: "4px" }}>
-                            {perm.subject?.name || "Unknown Subject"} (
-                            {perm.class?.name || "Unknown Class"}{" "}
-                            {perm.class?.division
-                              ? `- ${perm.class.division}`
-                              : ""}
-                            )
-                          </span>
-                        ))
-                      : "None"}
                   </TableCell>
                   <TableCell>
                     <button

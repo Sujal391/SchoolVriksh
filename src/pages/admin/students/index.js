@@ -118,6 +118,11 @@ const StudentsPage = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [error, setError] = useState(null);
 
+  // pagination state
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -144,6 +149,9 @@ const StudentsPage = () => {
         const studentsRes = await AdminService.getStudentsByClass(selectedClassId);
         setStudents(studentsRes.data.students || []);
         setError(null);
+        // compute total pages
+        const pages = Math.ceil(studentsRes.data.students.length / rowsPerPage) || 1;
+        setTotalPages(pages);
       } catch (error) {
         setError("Failed to fetch students: " + (error.response?.data?.message || error.message));
       } finally {
@@ -152,7 +160,18 @@ const StudentsPage = () => {
     };
 
     fetchStudents();
-  }, [selectedClassId]);
+  }, [selectedClassId, rowsPerPage]); // update total pages when rowsPerPage changes
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (newRowsPerPage) => {
+    setRowsPerPage(newRowsPerPage);
+    setPage(1); // reset to first page
+    const pages = Math.ceil(students.length / newRowsPerPage) || 1;
+    setTotalPages(pages);
+  };
 
   const handleFormSubmit = async (studentData) => {
     try {
@@ -174,6 +193,12 @@ const StudentsPage = () => {
       setError("Failed to save student: " + (error.response?.data?.message || error.message));
     }
   };
+
+   // slice students for pagination
+  const paginatedStudents = students.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
 
   return (
     <AdminLayout>
@@ -210,9 +235,14 @@ const StudentsPage = () => {
         </div>
 
         <StudentTable
-          students={students}
+          students={paginatedStudents}
           selectedClassId={selectedClassId}
           loading={loading}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
         />
 
         <StudentFormModal

@@ -20,6 +20,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { CalendarToday } from '@mui/icons-material';
+import EmptyState from '../common/EmptyState';
 
 const badgeColors = {
   Final: 'bg-red-100 text-red-800',
@@ -69,138 +70,135 @@ const ExamEventTable = ({ examEvents, onEdit, loading }) => {
   };
 
   return (
-    <Box>
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table>
-          <TableHead sx={{ backgroundColor: '#E0E0E0' }}>
-            <TableRow>
-              <TableCell>Exam Name</TableCell>
-              <TableCell>Exam Type</TableCell>
-              <TableCell>Exam Dates</TableCell>
-              <TableCell>Classes</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
+    <Paper className="overflow-x-auto p-2">
+        <TableContainer>
+          <Table>
+            <TableHead sx={{ backgroundColor: '#E0E0E0' }}>
+              <TableRow>
+                <TableCell>Exam Name</TableCell>
+                <TableCell>Exam Type</TableCell>
+                <TableCell>Exam Dates</TableCell>
+                <TableCell>Classes</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
 
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-                    <CircularProgress size={20} />
-                    Loading exam events...
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ) : examEvents.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No exam events found
-                </TableCell>
-              </TableRow>
-            ) : (
-              examEvents
-                .slice((page - 1) * rowsPerPage, (page - 1) * rowsPerPage + rowsPerPage)
-                .map((exam) => (
-                  <TableRow key={exam._id} hover>
-                    <TableCell>{exam.name}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 text-xs uppercase rounded-full ${badgeColors[exam.examType]}`}
-                      >
-                        {exam.examType === 'Other' ? exam.customExamType : exam.examType}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2 text-sm">
-                        <CalendarToday fontSize="small" color="action" />
-                        {exam.startDate === exam.endDate ? (
-                          <span className="font-medium">{formatDate(exam.startDate)}</span>
-                        ) : (
-                          <>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center">
+                    <EmptyState loading loadingMessage="Loading exam events..." />
+                  </TableCell>
+                </TableRow>
+              ) : examEvents.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center">
+                    <EmptyState message="No exam events found" />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                examEvents
+                  .slice((page - 1) * rowsPerPage, (page - 1) * rowsPerPage + rowsPerPage)
+                  .map((exam) => (
+                    <TableRow key={exam._id} hover>
+                      <TableCell>{exam.name}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`px-2 py-1 text-xs uppercase rounded-full ${badgeColors[exam.examType]}`}
+                        >
+                          {exam.examType === 'Other' ? exam.customExamType : exam.examType}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2 text-sm">
+                          <CalendarToday fontSize="small" color="action" />
+                          {exam.startDate === exam.endDate ? (
                             <span className="font-medium">{formatDate(exam.startDate)}</span>
-                            <span className="text-gray-500">→</span>
-                            <span className="font-medium">{formatDate(exam.endDate)}</span>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Box display="flex" flexWrap="wrap" gap={1}>
-                        {exam.classes?.slice(0, 3).map((cls) => (
-                          <span
-                            key={cls._id}
-                            className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs"
-                          >
-                            {cls.name}
-                          </span>
-                        ))}
-                        {exam.classes?.length > 3 && (
-                          <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
-                            +{exam.classes.length - 3} more
-                          </span>
-                        )}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          badgeColors[exam.status] || 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {exam.status.replace('_', ' ')}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/admin/exams/schedule/${exam._id}`}
-                        className="text-blue-600 hover:text-blue-900 flex items-center"
-                      >
-                        <FaCalendarAlt className="mr-1" /> View Schedule
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                          ) : (
+                            <>
+                              <span className="font-medium">{formatDate(exam.startDate)}</span>
+                              <span className="text-gray-500">→</span>
+                              <span className="font-medium">{formatDate(exam.endDate)}</span>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Box display="flex" flexWrap="wrap" gap={1}>
+                          {exam.classes?.slice(0, 3).map((cls) => (
+                            <span
+                              key={cls._id}
+                              className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs"
+                            >
+                              {cls.name}
+                            </span>
+                          ))}
+                          {exam.classes?.length > 3 && (
+                            <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
+                              +{exam.classes.length - 3} more
+                            </span>
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            badgeColors[exam.status] || 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {exam.status.replace('_', ' ')}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/admin/exams/schedule/${exam._id}`}
+                          className="text-blue-600 hover:text-blue-900 flex items-center"
+                        >
+                          <FaCalendarAlt className="mr-1" /> View Schedule
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* Pagination Controls */}
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        px={2}
-        mb={1}
-        mt={2}
-      >
-        <Typography variant="subtitle1">
-          Page {page} of {totalPages}
-        </Typography>
+        {/* Pagination Controls */}
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          px={2}
+          mb={1}
+          mt={2}
+        >
+          <Typography variant="subtitle1">
+            Page {page} of {totalPages}
+          </Typography>
 
-        <Pagination
-          count={totalPages}
-          page={page}
-          onChange={handleChangePage}
-          color="primary"
-        />
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handleChangePage}
+            color="primary"
+          />
 
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>Rows per page</InputLabel>
-          <Select
-            value={rowsPerPage}
-            label="Rows per page"
-            onChange={handleChangeRowsPerPage}
-          >
-            <MenuItem value={5}>5</MenuItem>
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
-    </Box>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Rows per page</InputLabel>
+            <Select
+              value={rowsPerPage}
+              label="Rows per page"
+              onChange={handleChangeRowsPerPage}
+            >
+              <MenuItem value={5}>5</MenuItem>
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={25}>25</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+    </Paper>
   );
 };
 

@@ -11,11 +11,18 @@ const ClassesPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
 
+  // pagination state
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
+
   useEffect(() => {
     const fetchClasses = async () => {
       try {
         const response = await AdminService.getClasses();
         setClasses(response.data);
+        const pages = Math.ceil(response.data.length / rowsPerPage);
+        setTotalPages(pages);
       } catch (error) {
         console.error("Error fetching classes:", error);
       } finally {
@@ -24,7 +31,7 @@ const ClassesPage = () => {
     };
 
     fetchClasses();
-  }, []);
+  }, [rowsPerPage]);
 
   const handleFormSubmit = async (classData) => {
     try {
@@ -42,6 +49,24 @@ const ClassesPage = () => {
       console.error("Error saving class:", error);
     }
   };
+
+  
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (newRowsPerPage) => {
+    setRowsPerPage(newRowsPerPage);
+    setPage(1); // reset to first page
+    const pages = Math.ceil(classes.length / newRowsPerPage) || 1;
+    setTotalPages(pages);
+  };
+  
+  // slice classes for pagination
+  const paginatedClasses = classes.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
 
   return (
     <AdminLayout>
@@ -63,8 +88,13 @@ const ClassesPage = () => {
         </div>
 
         <ClassManagementTable
-          classes={classes}
-          loading={loading}            
+          classes={paginatedClasses}
+          loading={loading}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}      
           onEdit={(cls) => {
             setSelectedClass(cls);
             setIsModalOpen(true);

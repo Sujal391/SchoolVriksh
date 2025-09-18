@@ -175,14 +175,25 @@ const TeachersPage = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const { user } = useAuth();
 
+  // pagination state
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
+
   const fetchTeachers = async () => {
     try {
       setLoading(true);
       const response = await AdminService.getTeachers();
-      setTeachers(response.data || []);
+      const data = response.data || [];
+      setTeachers(data);
+
+      // compute total pages
+      const pages = Math.ceil(data.length / rowsPerPage) || 1;
+      setTotalPages(pages);
     } catch (error) {
       console.error('Error fetching teachers:', error);
       setTeachers([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -190,7 +201,18 @@ const TeachersPage = () => {
 
   useEffect(() => {
     fetchTeachers();
-  }, []);
+  }, [rowsPerPage]); // update total pages when rowsPerPage changes
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (newRowsPerPage) => {
+    setRowsPerPage(newRowsPerPage);
+    setPage(1); // reset to first page
+    const pages = Math.ceil(teachers.length / newRowsPerPage) || 1;
+    setTotalPages(pages);
+  };
 
   const handleAssignClick = (teacher) => {
     setSelectedTeacher(teacher);
@@ -221,25 +243,36 @@ const TeachersPage = () => {
     setIsCreateModalOpen(false);
   };
 
+  // slice teachers for pagination
+  const paginatedTeachers = teachers.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
+
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Teacher Management</h1>            
           <Button
-          variant="contained"
-          size="small"
-          onClick={() => setIsCreateModalOpen(true)}            
+            variant="contained"
+            size="small"
+            onClick={() => setIsCreateModalOpen(true)}            
           >
             Add New Teacher
           </Button>
         </div>
         
         <TeacherTable 
-            teachers={teachers}
-            loading={loading}
-            onAssignClick={handleAssignClick} 
-          />        
+          teachers={paginatedTeachers}
+          loading={loading}
+          onAssignClick={handleAssignClick}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
+        />        
         
         <AssignTeacherModal
           isOpen={isAssignModalOpen}
