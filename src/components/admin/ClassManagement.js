@@ -1,68 +1,131 @@
-import CircularProgress from '@mui/material/CircularProgress';
+import React, { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  CircularProgress,
+  Box,
+  Typography,
+  TablePagination,
+  Pagination,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
+import EmptyState from "../common/EmptyState";
 
-const ClassManagementTable = ({ classes, onEdit, loading }) => {
+const ClassManagementTable = ({
+  classes = [],
+  loading,
+  page,
+  rowsPerPage,
+  totalPages,
+  onPageChange,
+  onRowsPerPageChange,
+  onEdit,
+}) => {
+  const handleChangePage = (event, newPage) => {
+    onPageChange(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    onRowsPerPageChange(parseInt(event.target.value, 10));
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border border-gray-200 shadow rounded-lg">
-        <thead className="bg-gray-100 text-gray-700 text-sm font-semibold">
-          <tr>
-            <th className="py-3 px-2 text-lg text-center border-b">Class</th>
-            <th className="py-3 px-2 text-lg text-center border-b">Division</th>
-            <th className="py-3 px-2 text-lg text-center border-b">Class Teacher</th>
-            <th className="py-3 px-2 text-lg text-center border-b">Students</th>
-            <th className="py-3 px-2 text-lg text-center border-b">Status</th>
-            <th className="py-3 px-2 text-lg text-center border-b">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="text-sm text-gray-700 divide-y">
-          {loading ? (
-            <tr>
-              <td colSpan={6} className="px-6 py-4 text-center">
-                <div className="flex items-center justify-center space-x-2">
-                  <CircularProgress size={20} />
-                  <span>Loading classes...</span>
-                </div>
-              </td>
-            </tr>
-          ) : classes.length === 0 ? (
-            <tr>
-              <td colSpan={6} className="px-6 py-4 text-center">
-                No classes found
-              </td>
-            </tr>
-          ) : (
-          classes.map((cls) => (
-            <tr key={cls._id} className="hover:bg-gray-50 transition">
-              <td className="py-2 px-4 text-center">{cls.name}</td>
-              <td className="py-2 px-4 text-center">{cls.division}</td>
-              <td className="py-2 px-4 text-center">{cls.classTeacher?.name || 'Not Assigned'}</td>
-              <td className="py-2 px-4 text-center">
-                {cls.students?.length || 0}/{cls.capacity}
-              </td>
-              <td className="py-2 px-4 text-center">
-                <span
-                  className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                    cls.status === 'active'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-700'
-                  }`}
-                >
-                  {cls.status}
-                </span>
-              </td>
-              <td className="py-2 px-4 flex justify-center">
-                <button
-                  onClick={() => onEdit(cls)}
-                  className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded"
-                >
-                  Edit
-                </button>
-              </td>
-            </tr>
-          )))} 
-        </tbody>
-      </table>
-    </div>
+    <Paper className="overflow-x-auto p-2">
+      <TableContainer>
+        <Table>
+          <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+            <TableRow>
+              <TableCell align="center">Class</TableCell>
+              <TableCell align="center">Division</TableCell>
+              <TableCell align="center">Class Teacher</TableCell>
+              <TableCell align="center">Students</TableCell>
+              <TableCell align="center">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <EmptyState loading loadingMessage="Loading classes..." />
+                </TableCell>
+              </TableRow>
+            ) : classes.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <EmptyState message="No classes found" />
+                </TableCell>
+              </TableRow>
+            ) : (
+              classes.map((cls) => (
+                <TableRow key={cls._id} hover>
+                  <TableCell align="center">{cls.name}</TableCell>
+                  <TableCell align="center">{cls.division}</TableCell>
+                  <TableCell align="center">
+                    {cls.classTeacher?.name || "Not Assigned"}
+                  </TableCell>
+                  <TableCell align="center">
+                    {cls.students?.length || 0}/{cls.capacity}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      size="small"
+                      onClick={() => onEdit(cls)}
+                    >
+                      Edit
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {/* Pagination controls */}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        px={2}
+        mb={1}
+        mt={2}
+      >
+        <Typography variant="subtitle1">
+          Page {page} of {totalPages}
+        </Typography>
+
+        <Pagination
+          count={totalPages}
+          page={page}
+          onChange={handleChangePage}
+          color="primary"
+        />
+
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel>Rows per page</InputLabel>
+          <Select
+            value={rowsPerPage}
+            label="Rows per page"
+            onChange={handleChangeRowsPerPage}
+          >
+            <MenuItem value={5}>5</MenuItem>
+            <MenuItem value={10}>10</MenuItem>
+            <MenuItem value={25}>25</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+    </Paper>
   );
 };
 

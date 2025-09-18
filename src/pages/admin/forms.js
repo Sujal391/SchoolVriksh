@@ -1744,7 +1744,7 @@ const AdmissionFormsPage = () => {
                 }
                 fullWidth
                 required
-                inputProps={{ min: 0, step: 0.01 }}
+                inputProps={{ step: 1 }}
                 error={newForm.admissionFee < 0}
                 helperText={
                   newForm.admissionFee < 0
@@ -1859,24 +1859,6 @@ const AdmissionFormsPage = () => {
                       />
                     }
                     label="Required Field"
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    label="Validation Pattern (Regex)"
-                    value={newField.validation.pattern || ""}
-                    onChange={(e) =>
-                      setNewField({
-                        ...newField,
-                        validation: {
-                          ...newField.validation,
-                          pattern: e.target.value,
-                        },
-                      })
-                    }
-                    fullWidth
-                    helperText="Optional regex for validation"
                   />
                 </Grid>
 

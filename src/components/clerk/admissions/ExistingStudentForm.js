@@ -686,7 +686,7 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
               <FormControl fullWidth required variant="outlined" size="medium" error={!!errors.gender}>
-                <InputLabel shrink sx={{ width: '150px' }}>
+                <InputLabel>
                   Gender
                 </InputLabel>
                 <Select

@@ -6,12 +6,38 @@ import {
   Typography,
   IconButton,
   Divider,
+  Chip,
+  Grid,
+  Stack,
+  Pagination,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonIcon from "@mui/icons-material/Person";
-import CircularProgress from '@mui/material/CircularProgress';
+import { useTheme } from "@mui/material/styles";
 
-const StudentTable = ({ students, selectedClassId, loading }) => {
+const StudentTable = ({
+  students,
+  selectedClassId,
+  loading,
+  page,
+  rowsPerPage,
+  totalPages,
+  onPageChange,
+  onRowsPerPageChange,
+}) => {
+  const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
@@ -25,88 +51,157 @@ const StudentTable = ({ students, selectedClassId, loading }) => {
     setOpen(false);
   };
 
-  return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-sm text-left text-gray-700 border border-gray-300 shadow-md rounded-lg">
-        <thead className="bg-gray-100 text-xs uppercase text-gray-600">
-          <tr>
-            <th className="px-4 py-3 text-[16px] text-center">Name</th>
-            <th className="px-4 py-3 text-[16px] text-center">GR Number</th>
-            <th className="px-4 py-3 text-[16px] text-center">Admission Type</th>
-            <th className="px-4 py-3 text-[16px] text-center">Gender</th>
-            <th className="px-4 py-3 text-[16px] text-center">Parent</th>
-            <th className="px-4 py-3 text-[16px] text-center">Student Details</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {loading ? (
-              <tr>
-                <td colSpan={6} className="px-6 py-4 text-center">
-                  <div className="flex items-center justify-center space-x-2">
-                    <CircularProgress size={20} />
-                    <span>Loading students...</span>
-                  </div>
-                </td>
-              </tr>
-            ) : !selectedClassId ? (
-            <tr>
-                <td colSpan={6} className="px-4 py-4 text-center text-gray-500">
-                  No class is selected
-                </td>
-              </tr>
-            ) : students.length === 0 ? (
-            <tr>
-              <td colSpan={6} className="px-4 py-2 text-center">
-                No students found
-              </td>
-            </tr>
-          ) : (
-            students.map((student) => (
-              <tr key={student.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 text-center">{student.name}</td>
-                <td className="px-4 py-2 text-center">{student.grNumber}</td>
-                <td className="px-4 py-2 text-center">
-                  <span
-                    className={`px-2 py-1 rounded text-white text-xs font-medium ${
-                    student.admissionType === "RTE"
-                      ? "bg-purple-600"
-                      : "bg-blue-600"
-                  }`}
-                >
-                  {student.admissionType}
-                </span>
-              </td>
-              <td className="px-4 py-2 text-center">{student.gender}</td>
-              <td className="px-4 py-2 text-center">
-                {student.parentDetails?.name || "N/A"}
-                {student.parentDetails?.mobile && (
-                  <div className="text-xs text-gray-500">
-                    {student.parentDetails.mobile}
-                  </div>
-                )}
-              </td>
-              <td className="px-4 py-2 text-center">
-                {/* <span className={`px-2 py-1 rounded text-white text-xs font-medium ${
-                  student.status === 'active' ? 'bg-green-600' : 'bg-red-500'
-                }`}>
-                  {student.status}
-                </span> */}
-                <Button
-                  variant="text"
-                  color="primary"
-                  size="small"
-                  onClick={handleOpen}
-                  sx={{ textTransform: "none" }}
-                >
-                  View
-                </Button>
-              </td>
-            </tr>
-            )))}
-        </tbody>
-      </table>
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-IN");
+  };
 
-      {/* Modal */}
+  const handleChangePage = (event, newPage) => {
+    onPageChange(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    onRowsPerPageChange(parseInt(event.target.value, 10));
+  };
+
+  const DetailItem = ({ label, value, fullWidth = false }) => (
+    <Box sx={{ mb: 1.5 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{ fontWeight: 600, color: "#666", mb: 0.5 }}
+      >
+        {label}:
+      </Typography>
+      <Typography sx={{ color: "#333" }}>{value || "N/A"}</Typography>
+      {!fullWidth && <Divider sx={{ mt: 1 }} />}
+    </Box>
+  );
+
+  const InfoSection = ({ title, children }) => (
+    <Box
+      sx={{
+        p: 3,
+        border: "1px solid #ddd",
+        borderRadius: 2,
+        backgroundColor: "#fafafa",
+      }}
+    >
+      <Typography
+        variant="h6"
+        sx={{
+          mb: 2,
+          color: "#1976d2",
+          borderBottom: "2px solid #1976d2",
+          pb: 1,
+        }}
+      >
+        {title}
+      </Typography>
+      {children}
+    </Box>
+  );
+
+  return (
+    <Paper className="overflow-x-auto p-2">
+      <TableContainer>
+        <Table>
+          <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+            <TableRow>
+              <TableCell align="center">Name</TableCell>
+              <TableCell align="center">GR Number</TableCell>
+              <TableCell align="center">Admission Type</TableCell>
+              <TableCell align="center">Gender</TableCell>
+              <TableCell align="center">Parent</TableCell>
+              <TableCell align="center">Student Details</TableCell>
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+                    <CircularProgress size={20} />
+                    Loading students...
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ) : !selectedClassId ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ color: "#999" }}>
+                  No class is selected
+                </TableCell>
+              </TableRow>
+            ) : students.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ color: "#999" }}>
+                  No students found
+                </TableCell>
+              </TableRow>
+            ) : (
+              students.map((student) => (
+                <TableRow key={student.id} hover>
+                  <TableCell align="center">{student.name}</TableCell>
+                  <TableCell align="center">{student.grNumber}</TableCell>
+                  <TableCell align="center">
+                    <Chip
+                      label={student.admissionType}
+                      size="small"
+                      sx={{
+                        color: "#fff",
+                        backgroundColor:
+                          student.admissionType === "RTE" ? "#6B46C1" : "#2563EB",
+                        fontWeight: 600,
+                        fontSize: "0.75rem",
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell align="center">{student.gender}</TableCell>
+                  <TableCell align="center">
+                    {student.parentDetails?.name || "N/A"}
+                    {student.parentDetails?.mobile && (
+                      <Typography variant="caption" sx={{ display: "block", color: "#666" }}>
+                        {student.parentDetails.mobile}
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="text"
+                      color="primary"
+                      size="small"
+                      onClick={() => handleOpen(student)}
+                      sx={{ textTransform: "none" }}
+                    >
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Pagination controls */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" px={2} mb={1} mt={2}>
+        <Typography variant="subtitle1">
+          Page {page} of {totalPages}
+        </Typography>
+
+        <Pagination count={totalPages} page={page} onChange={handleChangePage} color="primary" />
+
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel>Rows per page</InputLabel>
+          <Select value={rowsPerPage} label="Rows per page" onChange={handleChangeRowsPerPage}>
+            <MenuItem value={5}>5</MenuItem>
+            <MenuItem value={10}>10</MenuItem>
+            <MenuItem value={25}>25</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+
+      {/* Enhanced Modal */}
       <Modal
         open={open}
         onClose={handleClose}
@@ -126,82 +221,170 @@ const StudentTable = ({ students, selectedClassId, loading }) => {
             transform: "translate(-50%, -50%)",
             bgcolor: "background.paper",
             boxShadow: 24,
-            p: 4,
-            borderRadius: 2,
-            maxWidth: 400,
-            width: "90%",
+            p: 0,
+            borderRadius: 3,
+            maxWidth: 700,
+            width: "95%",
+            maxHeight: "90vh",
+            overflow: "hidden",
           }}
         >
+          {/* Header */}
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              mb: 1,
+              p: 3,
+              bgcolor: "#f8f9fa",
+              borderBottom: "1px solid #e0e0e0",
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <PersonIcon style={{ fontSize: "2rem", color: "#333" }} />
-              <Typography variant="h6" component="h2">
-                Student Details
-              </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <PersonIcon sx={{ fontSize: "2.2rem", color: "#1976d2" }} />
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Student Details
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#666" }}>
+                  {selectedStudent?.name}
+                </Typography>
+              </Box>
             </Box>
             <IconButton onClick={handleClose}>
-              <CloseIcon style={{ color: "#333" }} />
+              <CloseIcon sx={{ color: "#666" }} />
             </IconButton>
           </Box>
 
-          <Divider sx={{ mb: 2 }} />
+          {/* Content */}
+          <Box sx={{ p: 3, maxHeight: "calc(90vh - 100px)", overflowY: "auto" }}>
+            {selectedStudent ? (
+              <Stack spacing={4}>
+                {/* Personal Information */}
+                <InfoSection title="Personal Information">
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Full Name" value={selectedStudent.name} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="GR Number" value={selectedStudent.grNumber} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Email" value={selectedStudent.email} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Mobile" value={selectedStudent.mobile} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Date of Birth" value={formatDate(selectedStudent.dob)} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Gender" value={selectedStudent.gender} />
+                    </Grid>
+                  </Grid>
+                </InfoSection>
 
-          {selectedStudent ? (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <Box>
-                <Typography variant="subtitle2">Name:</Typography>
-                <Typography>{selectedStudent.name || "N/A"}</Typography>
-                <Divider />
-              </Box>
+                {/* Academic Information */}
+                <InfoSection title="Academic Information">
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Admission Type" value={selectedStudent.admissionType} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Admission Date" value={formatDate(selectedStudent.admissionDate)} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="RTE Status" value={selectedStudent.isRTE ? "Yes" : "No"} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Status" value={selectedStudent.status} />
+                    </Grid>
+                  </Grid>
+                </InfoSection>
 
-              <Box>
-                <Typography variant="subtitle2">GR Number:</Typography>
-                <Typography>{selectedStudent.grNumber || "N/A"}</Typography>
-                <Divider />
-              </Box>
+                {/* Personal Details */}
+                <InfoSection title="Personal Details">
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Religion" value={selectedStudent.religion} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Caste" value={selectedStudent.caste} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Sub Caste" value={selectedStudent.subCaste} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="UID Number" value={selectedStudent.uidNumber} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Aadhar Number" value={selectedStudent.aadharNumber} />
+                    </Grid>
+                  </Grid>
+                </InfoSection>
 
-              <Box>
-                <Typography variant="subtitle2">Admission Type:</Typography>
-                <Typography>
-                  {selectedStudent.admissionType || "N/A"}
-                </Typography>
-                <Divider />
-              </Box>
+                {/* Parent Information */}
+                {selectedStudent.parentDetails && (
+                  <InfoSection title="Parent Information">
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <DetailItem label="Parent Name" value={selectedStudent.parentDetails.name} />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <DetailItem label="Parent Email" value={selectedStudent.parentDetails.email} />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <DetailItem label="Parent Mobile" value={selectedStudent.parentDetails.mobile} />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <DetailItem label="Parent Occupation" value={selectedStudent.parentDetails.occupation} />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <DetailItem label="Parent Aadhar" value={selectedStudent.parentDetails.aadharNumber} />
+                      </Grid>
+                    </Grid>
+                  </InfoSection>
+                )}
 
-              <Box>
-                <Typography variant="subtitle2">Gender:</Typography>
-                <Typography>{selectedStudent.gender || "N/A"}</Typography>
-                <Divider />
-              </Box>
+                {/* Transport Information */}
+                {selectedStudent.transportDetails && (
+                  <InfoSection title="Transport Information">
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <DetailItem
+                          label="Transport Applicable"
+                          value={selectedStudent.transportDetails.isApplicable ? "Yes" : "No"}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <DetailItem
+                          label="Distance Slab"
+                          value={selectedStudent.transportDetails.distanceSlab || "Not Applicable"}
+                        />
+                      </Grid>
+                    </Grid>
+                  </InfoSection>
+                )}
 
-              <Box>
-                <Typography variant="subtitle2">Parent Name:</Typography>
-                <Typography>
-                  {selectedStudent.parentDetails?.name || "N/A"}
-                </Typography>
-                <Divider />
-              </Box>
-
-              <Box>
-                <Typography variant="subtitle2">Parent Mobile:</Typography>
-                <Typography>
-                  {selectedStudent.parentDetails?.mobile || "N/A"}
-                </Typography>
-              </Box>
-            </Box>
-          ) : (
-            <Typography>No details available</Typography>
-          )}
+                {/* Record Information */}
+                <InfoSection title="Record Information">
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Created At" value={formatDate(selectedStudent.createdAt)} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DetailItem label="Updated At" value={formatDate(selectedStudent.updatedAt)} />
+                    </Grid>
+                  </Grid>
+                </InfoSection>
+              </Stack>
+            ) : (
+              <Typography>No details available</Typography>
+            )}
+          </Box>
         </Box>
       </Modal>
-    </div>
+    </Paper>
   );
 };
 

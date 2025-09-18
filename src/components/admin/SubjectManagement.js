@@ -17,6 +17,7 @@ import {
   Typography,
   Button,
 } from '@mui/material';
+import EmptyState from '../common/EmptyState';
 
 const SubjectTable = ({ subjects, onEdit, loading }) => {
   const [page, setPage] = useState(1);
@@ -52,16 +53,13 @@ const SubjectTable = ({ subjects, onEdit, loading }) => {
             {loading ? (
               <TableRow>
                 <TableCell colSpan={4} align="center">
-                  <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-                    <CircularProgress size={24} />
-                    Loading subjects...
-                  </Box>
+                  <EmptyState loading loadingMessage="Loading subjects..." />
                 </TableCell>
               </TableRow>
             ) : subjects.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} align="center">
-                  No subjects found
+                  <EmptyState message="No subjects found" />
                 </TableCell>
               </TableRow>
             ) : (
