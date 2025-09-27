@@ -44,6 +44,7 @@ const SubjectTable = ({ subjects, onEdit, loading }) => {
             <TableRow>
               <TableCell><strong>Subject</strong></TableCell>
               <TableCell><strong>Class</strong></TableCell>
+              <TableCell><strong>Academic Year</strong></TableCell>
               <TableCell><strong>Teachers</strong></TableCell>
               <TableCell><strong>Actions</strong></TableCell>
             </TableRow>
@@ -52,13 +53,13 @@ const SubjectTable = ({ subjects, onEdit, loading }) => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} align="center">
+                <TableCell colSpan={5} align="center">
                   <EmptyState loading loadingMessage="Loading subjects..." />
                 </TableCell>
               </TableRow>
             ) : subjects.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} align="center">
+                <TableCell colSpan={5} align="center">
                   <EmptyState message="No subjects found" />
                 </TableCell>
               </TableRow>
@@ -67,6 +68,7 @@ const SubjectTable = ({ subjects, onEdit, loading }) => {
                 <TableRow key={subject._id}>
                   <TableCell>{subject.name}</TableCell>
                   <TableCell>{subject.class?.name} - {subject.class?.division}</TableCell>
+                  <TableCell>{subject.academicYear || 'N/A'}</TableCell>
                   <TableCell>
                     <Box display="flex" flexWrap="wrap" gap={1}>
                       {subject.teachers?.length > 0 ? (
