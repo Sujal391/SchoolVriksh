@@ -9,7 +9,9 @@ const ExamSchedulePage = () => {
   const router = useRouter();
   const { id } = router.query;
   const [examEvent, setExamEvent] = useState(null);
+  const [scheduleData, setScheduleData] = useState(null);
   const [schedules, setSchedules] = useState({});
+  const [unscheduledExams, setUnscheduledExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -27,7 +29,10 @@ const ExamSchedulePage = () => {
         
         // Fetch schedules for this exam event
         const scheduleRes = await AdminService.getExamSchedulesForEvent(id);
-        setSchedules(scheduleRes.data.data.schedule || {});
+        const scheduleData = scheduleRes.data.data;
+        setScheduleData(scheduleData);
+        setSchedules(scheduleData.schedule || {});
+        setUnscheduledExams(scheduleData.unscheduled || []);
         
       } catch (error) {
         console.error('Error fetching exam schedule:', error);
@@ -55,6 +60,18 @@ const ExamSchedulePage = () => {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
+  };
+
+  const formatDuration = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (hours > 0 && remainingMinutes > 0) {
+      return `${hours}h ${remainingMinutes}m`;
+    } else if (hours > 0) {
+      return `${hours}h`;
+    } else {
+      return `${remainingMinutes}m`;
+    }
   };
 
   if (loading) {
@@ -117,40 +134,90 @@ const ExamSchedulePage = () => {
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex-1">
             <h1 className="text-3xl font-bold text-gray-900">{examEvent.name}</h1>
-            <div className="mt-2 space-y-1">
-              <p className="text-gray-600">
-                <span className="font-medium">Type:</span> {' '}
-                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
-                  {examEvent.examType === 'Other' ? examEvent.customExamType : examEvent.examType}
-                </span>
-              </p>
-              <p className="text-gray-600">
-                <span className="font-medium">Duration:</span> {' '}
-                {formatDate(examEvent.startDate)} - {formatDate(examEvent.endDate)}
-              </p>
-              <p className="text-gray-600">
-                <span className="font-medium">Classes:</span> {' '}
-                {examEvent.classes?.map(cls => `${cls.name}-${cls.division}`).join(', ')}
-              </p>
-              <p className="text-gray-600">
-                <span className="font-medium">Status:</span> {' '}
-                <span className={`px-2 py-1 rounded-full text-sm ${
-                  examEvent.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
-                  examEvent.status === 'completed' ? 'bg-green-100 text-green-800' :
-                  examEvent.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {examEvent.status.replace('_', ' ')}
-                </span>
-              </p>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 className="font-medium text-gray-900 mb-2">Exam Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-600">Type:</span>{' '}
+                    <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
+                      {examEvent.examType === 'Other' ? examEvent.customExamType : examEvent.examType}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Academic Year:</span>{' '}
+                    <span className="font-medium">{examEvent.academicYear}</span>
+                  </div>
+                  {examEvent.weightage && (
+                    <div>
+                      <span className="text-gray-600">Weightage:</span>{' '}
+                      <span className="font-medium">{examEvent.weightage}%</span>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-gray-600">Compulsory Exam:</span>{' '}
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      examEvent.requiresExam 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {examEvent.requiresExam ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 className="font-medium text-gray-900 mb-2">Schedule Info</h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-600">Duration:</span>{' '}
+                    <span className="font-medium">
+                      {examEvent.startDate === examEvent.endDate
+                        ? formatDate(examEvent.startDate)
+                        : `${formatDate(examEvent.startDate)} - ${formatDate(examEvent.endDate)}`}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Status:</span>{' '}
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      examEvent.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                      examEvent.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      examEvent.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {examEvent.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  {scheduleData && (
+                    <div>
+                      <span className="text-gray-600">Total Exams:</span>{' '}
+                      <span className="font-medium">{scheduleData.totalExams || 0}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 className="font-medium text-gray-900 mb-2">Classes</h3>
+                <div className="space-y-2 text-sm mt-1">
+                  <div className="flex flex-wrap gap-1">
+                    {examEvent.classes?.map((cls, index) => (
+                      <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                        {cls.name}-{cls.division}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <button
             onClick={() => router.push('/admin/exams')}
-            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+            className="ml-6 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
           >
             Back to Exams
           </button>
@@ -166,10 +233,43 @@ const ExamSchedulePage = () => {
           </div>
         )}
 
+        {/* Unscheduled Exams Warning */}
+        {unscheduledExams && unscheduledExams.length > 0 && (
+          <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-md">
+            <h3 className="font-medium text-orange-800 flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              Unscheduled Exams ({unscheduledExams.length})
+            </h3>
+            <p className="text-orange-700 mb-2">The following exams haven't been scheduled yet:</p>
+            <div className="space-y-2">
+              {unscheduledExams.map(exam => (
+                <div key={exam._id} className="flex items-center justify-between p-3 bg-white rounded border">
+                  <div>
+                    <span className="font-medium">{exam.subject.name}</span>
+                    <span className="mx-2">•</span>
+                    <span className="text-sm text-gray-600">{exam.class.name}-{exam.class.division}</span>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {exam.totalMarks} marks • {formatDuration(exam.duration)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Schedule */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">Exam Schedule</h2>
+            {scheduleData?.totalExams && (
+              <p className="text-sm text-gray-600 mt-1">
+                Total {scheduleData.totalExams} exam{scheduleData.totalExams !== 1 ? 's' : ''} 
+                {hasSchedules && ` scheduled across ${scheduleKeys.length} day${scheduleKeys.length !== 1 ? 's' : ''}`}
+              </p>
+            )}
           </div>
           
           {!hasSchedules ? (
@@ -188,49 +288,55 @@ const ExamSchedulePage = () => {
             <div className="divide-y divide-gray-200">
               {scheduleKeys.map(dateKey => (
                 <div key={dateKey} className="px-6 py-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    {formatDate(dateKey)}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <span>{formatDate(dateKey)}</span>
+                    <span className="ml-3 px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
+                      {schedules[dateKey].length} exam{schedules[dateKey].length !== 1 ? 's' : ''}
+                    </span>
                   </h3>
                   <div className="space-y-3">
                     {schedules[dateKey].map(exam => (
                       <div
                         key={exam._id}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border-l-4 border-blue-400"
                       >
                         <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <h4 className="font-medium text-gray-900">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h4 className="font-semibold text-gray-900 text-lg">
                               {exam.subject.name}
                             </h4>
-                            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                               {exam.class.name}-{exam.class.division}
                             </span>
                           </div>
-                          <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
-                            <span>
-                              ⏰ {formatTime(exam.startTime)} - {formatTime(exam.endTime)}
-                            </span>
-                            <span>
-                              📝 {exam.totalMarks} marks
-                            </span>
-                            <span>
-                              ⏱️ {Math.round(exam.duration / 60)} hours
-                            </span>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                            <div className="flex items-center">
+                              <span className="mr-2">⏰</span>
+                              <span>{formatTime(exam.startTime)} - {formatTime(exam.endTime)}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="mr-2">📝</span>
+                              <span>{exam.totalMarks} marks</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="mr-2">⏱️</span>
+                              <span>{formatDuration(exam.duration)}</span>
+                            </div>
+                            {exam.passingMarks && (
+                              <div className="flex items-center">
+                                <span className="mr-2">✅</span>
+                                <span>Pass: {exam.passingMarks} marks</span>
+                              </div>
+                            )}
                           </div>
+
                           {exam.seatingArrangement && exam.seatingArrangement.length > 0 && (
-                            <div className="mt-2 text-sm text-gray-600">
-                              🏫 Rooms: {exam.seatingArrangement.map(seat => seat.classroom).join(', ')}
+                            <div className="mt-2 flex items-center text-sm text-gray-600">
+                              <span className="mr-2">🏫</span>
+                              <span>Rooms: {exam.seatingArrangement.map(seat => seat.classroom).join(', ')}</span>
                             </div>
                           )}
-                        </div>
-                        <div className="text-right">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            exam.status === 'published' ? 'bg-purple-100 text-purple-800' :
-                            exam.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {exam.status.replace('_', ' ')}
-                          </span>
                         </div>
                       </div>
                     ))}
