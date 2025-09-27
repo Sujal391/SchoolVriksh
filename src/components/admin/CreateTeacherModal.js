@@ -357,6 +357,7 @@ const CreateTeacherModal = ({ isOpen, onClose, onTeacherCreated }) => {
     password: '',
     phone: '',
     address: '',
+    academicYear: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
     classTeacherOf: '',
     subjectAssignments: [],
   });
@@ -386,6 +387,7 @@ const CreateTeacherModal = ({ isOpen, onClose, onTeacherCreated }) => {
       password: '',
       phone: '',
       address: '',
+      academicYear: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
       classTeacherOf: '',
       subjectAssignments: [],
     });
@@ -611,6 +613,17 @@ const CreateTeacherModal = ({ isOpen, onClose, onTeacherCreated }) => {
               value={formData.address}
               onChange={handleInputChange}
               fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Academic Year"
+              name="academicYear"
+              value={formData.academicYear}
+              onChange={handleInputChange}
+              fullWidth
+              required
             />
           </Grid>
 

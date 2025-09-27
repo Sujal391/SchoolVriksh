@@ -46,6 +46,7 @@ const ClassManagementTable = ({
             <TableRow>
               <TableCell align="center">Class</TableCell>
               <TableCell align="center">Division</TableCell>
+              <TableCell align="center">Academic Year</TableCell>
               <TableCell align="center">Class Teacher</TableCell>
               <TableCell align="center">Students</TableCell>
               <TableCell align="center">Actions</TableCell>
@@ -55,13 +56,13 @@ const ClassManagementTable = ({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <EmptyState loading loadingMessage="Loading classes..." />
                 </TableCell>
               </TableRow>
             ) : classes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <EmptyState message="No classes found" />
                 </TableCell>
               </TableRow>
@@ -70,6 +71,7 @@ const ClassManagementTable = ({
                 <TableRow key={cls._id} hover>
                   <TableCell align="center">{cls.name}</TableCell>
                   <TableCell align="center">{cls.division}</TableCell>
+                  <TableCell align="center">{cls.academicYear}</TableCell>
                   <TableCell align="center">
                     {cls.classTeacher?.name || "Not Assigned"}
                   </TableCell>

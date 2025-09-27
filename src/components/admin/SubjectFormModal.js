@@ -25,6 +25,16 @@ const modalStyle = {
   p: 4,
 };
 
+const generateAcademicYearRanges = (startYear = new Date().getFullYear(), count = 6) => {
+  const ranges = [];
+  for (let i = 0; i < count; i++) {
+    const from = startYear + i;
+    const to = from + 1;
+    ranges.push(`${from}-${to}`);
+  }
+  return ranges;
+};
+
 const SubjectFormModal = ({
   isOpen,
   onClose,
@@ -35,7 +45,7 @@ const SubjectFormModal = ({
   const [formData, setFormData] = useState({
     name: "",
     classId: "",
-    status: "active",
+    academicYear: "",
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -44,13 +54,13 @@ const SubjectFormModal = ({
       setFormData({
         name: subjectData.name,
         classId: subjectData.class?._id || "",
-        status: subjectData.status,
+        academicYear: subjectData.academicYear || "",
       });
     } else {
       setFormData({
         name: "",
         classId: "",
-        status: "",
+        academicYear: "",
       });
     }
   }, [isOpen, subjectData, classes]);
@@ -71,11 +81,13 @@ const SubjectFormModal = ({
     try {
       await onSubmit(formData);
     } catch (err) {
-      console.error('Unexpected error in handleSubmit:', err);
+      console.error("Unexpected error in handleSubmit:", err);
     } finally {
       setSubmitting(false);
     }
   };
+
+  const academicYearRanges = generateAcademicYearRanges();
 
   return (
     <Modal open={isOpen} onClose={onClose}>
@@ -113,16 +125,21 @@ const SubjectFormModal = ({
           </Select>
         </FormControl>
 
+        {/* New Academic Year Range Field */}
         <FormControl fullWidth margin="normal">
-          <InputLabel>Status</InputLabel>
+          <InputLabel>Academic Year</InputLabel>
           <Select
-            name="status"
-            value={formData.status}
+            name="academicYear"
+            value={formData.academicYear}
             onChange={handleChange}
-            label="Status"
+            required
+            label="Academic Year"
           >
-            <MenuItem value="active">Active</MenuItem>
-            <MenuItem value="inactive">Inactive</MenuItem>
+            {academicYearRanges.map((yr) => (
+              <MenuItem key={yr} value={yr}>
+                {yr}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
@@ -138,10 +155,12 @@ const SubjectFormModal = ({
             {submitting ? (
               <>
                 <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-                {subjectData ? 'Updating...' : 'Creating...'}
+                {subjectData ? "Updating..." : "Creating..."}
               </>
+            ) : subjectData ? (
+              "Update"
             ) : (
-              subjectData ? 'Update' : 'Create'
+              "Create"
             )}
           </Button>
         </Box>
