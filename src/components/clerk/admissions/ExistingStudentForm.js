@@ -845,9 +845,10 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
               <TextField
                 fullWidth
                 label="UDIAS Number"
-                name="udiasNumber"
+                name="uidNumber"
                 value={formData.uidNumber}
                 onChange={handleChange}
+                inputProps={{ maxLength: 11, inputMode: "numeric", pattern: "[0-9]*" }}
                 required
                 variant="outlined"
                 size="medium"
