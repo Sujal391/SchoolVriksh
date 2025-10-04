@@ -7,31 +7,69 @@ import { toast } from 'react-toastify';
 import Button from '@mui/material/Button';
 
 const ExamsPage = () => {
-  const [examEvents, setExamEvents] = useState([]);
+  const [examSchedule, setExamSchedule] = useState({});
+  const [availableAcademicYears, setAvailableAcademicYears] = useState([]);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExam, setSelectedExam] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [examRes, classesRes] = await Promise.all([
-          AdminService.getExamSchedules(),
-          AdminService.getClasses()
-        ]);
-        setExamEvents(examRes.data.examEvent || []);
-        setClasses(classesRes.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error('Failed to load exam data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
+
+  const fetchData = async (academicYear = null) => {
+  setLoading(true);
+  try {
+    console.log('Fetching exams with academic year:', academicYear);
+    
+    const params = academicYear ? { academicYear } : {};
+    const [examRes, classesRes] = await Promise.all([
+      AdminService.getExamSchedules(params),
+      AdminService.getClasses()
+    ]);
+    
+    console.log('API Response:', examRes);
+    console.log('Schedule data:', examRes.data.schedule);
+    
+    // Set the schedule object (not examEvent array)
+    setExamSchedule(examRes.data.schedule || {});
+    setClasses(classesRes.data);
+
+    // Extract academic years from the schedule on first load
+    if (!academicYear) {
+      const years = extractAcademicYears(examRes.data.schedule);
+      console.log('Extracted academic years:', years);
+      setAvailableAcademicYears(years);
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    toast.error('Failed to load exam data');
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // Extract unique academic years from schedule
+  const extractAcademicYears = (schedule) => {
+    if (!schedule || typeof schedule !== 'object') return [];
+    
+    const years = new Set();
+    Object.keys(schedule).forEach(dateKey => {
+      if (Array.isArray(schedule[dateKey])) {
+        schedule[dateKey].forEach(exam => {
+          const year = exam.academicYear || exam.examEvent?.academicYear;
+          if (year) years.add(year);
+        });
+      }
+    });
+    
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
+  };
+
+  const handleAcademicYearChange = (academicYear) => {
+    fetchData(academicYear);
+  };
 
   const handleFormSubmit = async (formData) => {
     try {
@@ -39,8 +77,7 @@ const ExamsPage = () => {
       toast.success('Exam schedule created successfully');
       
       // Refresh exam list
-      const examRes = await AdminService.getExamSchedules();
-      setExamEvents(examRes.data.examEvent || []);
+      fetchData();
       setIsModalOpen(false);
     } catch (error) {
       console.error('Error saving exam:', error);
@@ -67,14 +104,16 @@ const ExamsPage = () => {
           </Button>
         </div>
 
-          <ExamEventTable 
-            examEvents={examEvents}
-            loading={loading}
-            onEdit={(exam) => {
-              setSelectedExam(exam);
-              setIsModalOpen(true);
-            }}
-          />
+        <ExamEventTable 
+          examEvents={examSchedule}
+          availableAcademicYears={availableAcademicYears}
+          loading={loading}
+          onAcademicYearChange={handleAcademicYearChange}
+          onEdit={(exam) => {
+            setSelectedExam(exam);
+            setIsModalOpen(true);
+          }}
+        />
 
         <ExamEventFormModal
           isOpen={isModalOpen}

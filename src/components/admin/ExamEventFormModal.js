@@ -748,24 +748,15 @@ const ExamEventFormModal = ({ isOpen, onClose, examData, classes, onSubmit }) =>
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <FormControl fullWidth>
-            <InputLabel>Exam Type</InputLabel>
-            <Select
-              value={formData.examType}
-              onChange={(e) => handleInputChange('examType', e.target.value)}
-              required
-              label="Exam Type"
-            >
-              <MenuItem value="Term 1">Term 1</MenuItem>
-              <MenuItem value="Term 2">Term 2</MenuItem>
-              <MenuItem value="Mid Term">Mid Term</MenuItem>
-              <MenuItem value="Final">Final</MenuItem>
-              <MenuItem value="Unit Test">Unit Test</MenuItem>
-              <MenuItem value="Practical">Practical</MenuItem>
-              <MenuItem value="Internal Assessment">Internal Assessment</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
-            </Select>
-          </FormControl>
+          <TextField
+            fullWidth
+            label="Exam Type"
+            name="examType"
+            value={formData.examType}
+            onChange={(e) => handleInputChange('examType', e.target.value)}
+            required
+            variant="outlined"
+          />
         </Grid>
 
         <Grid item xs={12} md={3}>

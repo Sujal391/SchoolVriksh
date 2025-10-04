@@ -116,6 +116,7 @@ const AdminService = {
 
   // Student Management
   getStudentsByClass: (classId = "all") => api.get(`/admin/students/class/${classId}`),
+  getAllStudents: () => api.get(`/admin/students/class/all`).then((res) => res.data),
 
   // Subject Management
   createSubject: (subjectData) => api.post("/admin/subjects", subjectData),
@@ -184,71 +185,81 @@ const AdminService = {
   // }),
 
 
-  getExamSchedules: () => api.get("/admin/schedules").then((res) => {
-  // Handle successful response (2xx)
-  const schedule = res.data.schedule || {};
-  const examEvents = [];
+getExamSchedules: (params = {}) => {
+  // Build query string from params
+  const queryString = new URLSearchParams(params).toString();
+  const url = queryString 
+    ? `/admin/schedules?${queryString}` 
+    : `/admin/schedules`;
   
-  // Convert the date-organized schedule back to exam events array
-  Object.keys(schedule).forEach(date => {
-    schedule[date].forEach(exam => {
-      let existingEvent = examEvents.find(event => 
-        event._id === exam.examEvent._id
-      );
-      
-      if (!existingEvent) {
-        existingEvent = {
-          _id: exam.examEvent._id,
-          name: exam.examEvent.name,
-          examType: exam.examEvent.examType,
-          customExamType: exam.examEvent.customExamType,
-          startDate: date,
-          endDate: date,
-          classes: [],
-          status: exam.status || 'scheduled'
-        };
-        examEvents.push(existingEvent);
-      }
-      
-      if (new Date(date) > new Date(existingEvent.endDate)) {
-        existingEvent.endDate = date;
-      }
-      
-      const classExists = existingEvent.classes.some(cls => 
-        cls._id === exam.class._id
-      );
-      if (!classExists) {
-        existingEvent.classes.push({
-          _id: exam.class._id,
-          name: exam.class.name,
-          division: exam.class.division
-        });
-      }
+  return api.get(url).then((res) => {
+    // Handle successful response (2xx)
+    const schedule = res.data.schedule || {};
+    const examEvents = [];
+    
+    // Convert the date-organized schedule back to exam events array
+    Object.keys(schedule).forEach(date => {
+      schedule[date].forEach(exam => {
+        let existingEvent = examEvents.find(event => 
+          event._id === exam.examEvent._id
+        );
+        
+        if (!existingEvent) {
+          existingEvent = {
+            _id: exam.examEvent._id,
+            name: exam.examEvent.name,
+            examType: exam.examEvent.examType,
+            customExamType: exam.examEvent.customExamType,
+            academicYear: exam.examEvent.academicYear || exam.academicYear, // Add academic year
+            // examDate: exam.examEvent.examDate || exam.examDate, // Add exam date
+            startDate: date,
+            endDate: date,
+            classes: [],
+            status: exam.status || 'scheduled'
+          };
+          examEvents.push(existingEvent);
+        }
+        
+        if (new Date(date) > new Date(existingEvent.endDate)) {
+          existingEvent.endDate = date;
+        }
+        
+        const classExists = existingEvent.classes.some(cls => 
+          cls._id === exam.class._id
+        );
+        if (!classExists) {
+          existingEvent.classes.push({
+            _id: exam.class._id,
+            name: exam.class.name,
+            division: exam.class.division
+          });
+        }
+      });
     });
-  });
-  
-  return {
-    data: {
-      examEvent: examEvents,
-      schedule: schedule,
-      totalExams: res.data.totalExams || 0
-    }
-  };
-}).catch((error) => {
-  // Handle 404 specifically
-  if (error.response && error.response.status === 404) {
-    // Return empty data for no schedules
+    
     return {
       data: {
-        examEvent: [],
-        schedule: {},
-        totalExams: 0
+        examEvent: examEvents,
+        schedule: schedule,
+        totalExams: res.data.totalExams || 0
       }
     };
-  }
-  // Re-throw other errors
-  throw error;
-}),
+  }).catch((error) => {
+    // Handle 404 specifically
+    if (error.response && error.response.status === 404) {
+      // Return empty data for no schedules
+      return {
+        data: {
+          examEvent: [],
+          schedule: {},
+          totalExams: 0
+        }
+      };
+    }
+    // Re-throw other errors
+    throw error;
+  });
+},
 
    getExamEvent: async (id) => {
   const token = cookies.get('token');
@@ -283,14 +294,42 @@ const AdminService = {
     });
   },
 
-  getUnpublishedMarksheets: (examEventId, classId) =>
-    api.get(`/admin/exam-events/${examEventId}/classes/${classId}/unpublished-marksheets`).then((res) => res.data),
+  // getUnpublishedMarksheets: (examEventId, classId) =>
+  //   api.get(`/admin/exam-events/${examEventId}/classes/${classId}/unpublished-marksheets`).then((res) => res.data),
 
-  publishIndividualMarksheet: (examEventId, classId, studentId) =>
-    api.post(`/admin/exam-events/${examEventId}/classes/${classId}/students/${studentId}/publish`),
+  // publishIndividualMarksheet: (examEventId, classId, studentId) =>
+  //   api.post(`/admin/exam-events/${examEventId}/classes/${classId}/students/${studentId}/publish`),
 
-  getAllMarksheets: (examEventexamEventId, classId) =>
-    api.get(`/admin/exam-events/${examEventId}/classes/${classId}/marksheets`).then((res) => res.data),
+  // getAllMarksheets: (examEventId, classId) =>
+  //   api.get(`/admin/exam-events/${examEventId}/classes/${classId}/marksheets`).then((res) => res.data),
+
+  // Get Submitted Excel Results - NEW API
+  getSubmittedExcelResults: (classId, academicYear) =>
+    api.get(`/admin/classes/${classId}/academic-year/${academicYear}/results`).then((res) => res.data),
+
+  // Verify Excel Results - NEW API
+  verifyExcelResults: (classId, academicYear) =>
+    api.post(`/admin/classes/${classId}/academic-year/${academicYear}/verify-results`).then((res) => res.data),
+
+  // Get All Marksheets - NEW API
+  getAllMarksheetsByClass: (classId, academicYear) =>
+    api.get(`/admin/classes/${classId}/academic-year/${academicYear}/marksheets`).then((res) => res.data),
+
+  // Publish Individual Marksheet - NEW API
+  publishIndividualMarksheet: (classId, academicYear, studentId) =>
+    api.post(`/admin/classes/${classId}/academic-year/${academicYear}/students/${studentId}/publish`).then((res) => res.data),
+
+  // Get Published Marksheets - NEW API
+  getPublishedMarksheets: (classId, academicYear) =>
+    api.get(`/admin/classes/${classId}/academic-year/${academicYear}/published-marksheets`).then((res) => res.data),
+
+  // Get Unpublished Marksheets - NEW API
+  getUnpublishedMarksheets: (classId, academicYear) =>
+    api.get(`/admin/classes/${classId}/academic-year/${academicYear}/unpublished-marksheets`).then((res) => res.data),
+
+  // Get Student Marksheet - NEW API
+  getStudentMarksheet: (studentId, academicYear) =>
+    api.get(`/admin/students/${studentId}/academic-year/${academicYear}/marksheet`).then((res) => res.data),
 
   // Attendance Management
   getAttendanceReport: (params) => api.get("/admin/attendance", { params }),

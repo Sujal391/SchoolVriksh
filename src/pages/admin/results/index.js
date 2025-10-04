@@ -1,185 +1,239 @@
 import { useState, useEffect, memo } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
 import AdminService from "../../../services/adminService";
-import ResultsTable from "../../../components/admin/ResultsTable";
-import UnpublishedMarksheetsTable from "../../../components/admin/UnpublishedMarksheetsTable";
-import ExcelUpload from "../../../components/admin/ExcelUpload";
-import { Box, Button, InputLabel, MenuItem, Select, CircularProgress } from "@mui/material";
+import SubmittedResultsTab from "../../../components/admin/SubmittedResultsTab";
+import AllMarksheetsTab from "../../../components/admin/AllMarksheetsTab";
+import PublishedMarksheetsTab from "../../../components/admin/PublishedMarksheetsTab";
+import UnpublishedMarksheetsTab from "../../../components/admin/UnpublishedMarksheetsTab";
+import StudentMarksheetTab from "../../../components/admin/StudentMarksheetTab";
+import LegacyExamResultsTab from "../../../components/admin/LegacyExamResultsTab";
+import {
+  ErrorMessage,
+  SuccessMessage,
+  ResultsPageHeader,
+  ResultsTabNavigation,
+  TabPanel
+} from "../../../components/admin/ResultsPageComponents";
+import { Box } from "@mui/material";
 
 const ExamResultsPage = () => {
+  // State for exam events and classes
   const [examEvents, setExamEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
+
+  // State for different result types
   const [results, setResults] = useState([]);
   const [unpublishedMarksheets, setUnpublishedMarksheets] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [submittedResults, setSubmittedResults] = useState(null);
+  const [marksheets, setMarksheets] = useState(null);
 
+  // State for academic year filtering
+  const [availableAcademicYears, setAvailableAcademicYears] = useState([]);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+
+  // UI state
+  const [tabValue, setTabValue] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Initialize data on component mount
   useEffect(() => {
-    const fetchExamEvents = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await AdminService.getExamSchedules();
-        setExamEvents(response.data.examEvent);
+        const [examResponse, classesResponse] = await Promise.all([
+          AdminService.getExamSchedules(),
+          AdminService.getClasses()
+        ]);
+
+        setExamEvents(examResponse.data.examEvent);
+        setClasses(classesResponse.data);
+
+        // Extract academic years from exam events
+        const academicYears = [...new Set(
+          examResponse.data.examEvent
+            .map(event => event.academicYear)
+            .filter(year => year)
+        )].sort((a, b) => b.localeCompare(a));
+
+        setAvailableAcademicYears(academicYears);
+        if (academicYears.length > 0) {
+          setSelectedAcademicYear(academicYears[0]); // Set most recent academic year
+        }
       } catch (error) {
-        console.error("Error fetching exam events:", error);
-        setError("Failed to load exam events.");
+        console.error("Error fetching initial data:", error);
+        setError("Failed to load initial data: " + error.message);
       }
     };
 
-    fetchExamEvents();
+    fetchInitialData();
   }, []);
 
-  useEffect(() => {
-    if (selectedEvent) {
-      setClasses(selectedEvent.classes || []);
-      setSelectedClass(null);
-      setResults([]);
-      setUnpublishedMarksheets([]);
-    }
-  }, [selectedEvent]);
-
+  // Legacy exam results functions
   const handleFetchResults = async () => {
-    setResults([]);
-    if (!selectedEvent || !selectedClass) return;
+    if (!selectedEvent) return;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await AdminService.reviewClassResults(selectedEvent._id, selectedClass._id);
-      setResults(response.results || []);
+      const response = await AdminService.getResults(selectedEvent._id);
+      setResults(response.data);
     } catch (error) {
       console.error("Error fetching results:", error);
-      setError("Failed to load results: " + (error.response?.data?.error || error.message));
+      setError("Failed to load results: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleFetchUnpublishedMarksheets = async () => {
-    if (!selectedEvent || !selectedClass) return;
+    if (!selectedEvent) return;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await AdminService.getUnpublishedMarksheets(selectedEvent._id, selectedClass._id);
-      setUnpublishedMarksheets(response.marksheets || []);
+      const response = await AdminService.getUnpublishedMarksheets(selectedEvent._id);
+      setUnpublishedMarksheets(response.data);
     } catch (error) {
       console.error("Error fetching unpublished marksheets:", error);
-      setError("Failed to load unpublished marksheets: " + (error.response?.data?.error || error.message));
+      setError("Failed to load unpublished marksheets: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePublishMarksheet = async (studentId) => {
-    if (!selectedEvent || !selectedClass) return;
-
-    setLoading(true);
+  // Clear messages when tab changes
+  useEffect(() => {
     setError(null);
-    try {
-      await AdminService.publishIndividualMarksheet(selectedEvent._id, selectedClass._id, studentId);
-      // Refresh both results and unpublished marksheets
-      await Promise.all([handleFetchResults(), handleFetchUnpublishedMarksheets()]);
-      alert("Marksheet published successfully!");
-    } catch (error) {
-      console.error("Error publishing marksheet:", error);
-      setError("Failed to publish marksheet: " + (error.response?.data?.error || error.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleExcelUploadSuccess = async () => {
-    // Refresh results and unpublished marksheets after successful upload
-    await Promise.all([handleFetchResults(), handleFetchUnpublishedMarksheets()]);
-  };
+    setSuccessMessage('');
+  }, [tabValue]);
 
   return (
     <AdminLayout>
-      <Box className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Exam Results Management</h1>
+      <Box className="p-6">
+        <ResultsPageHeader />
 
-        {error && (
-          <Box className="mb-4 p-4 bg-red-100 text-red-700 rounded">{error}</Box>
-        )}
+        <ErrorMessage error={error} />
+        <SuccessMessage successMessage={successMessage} />
 
-        <Box className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Box>
-            <InputLabel className="block text-sm font-medium text-gray-700 mb-1">
-              Select Exam Event
-            </InputLabel>
-            <Select
-              fullWidth
-              value={selectedEvent?._id || ""}
-              onChange={(e) => setSelectedEvent(examEvents.find((ev) => ev._id === e.target.value))}
-              displayEmpty
-            >
-              <MenuItem value="">Select an exam event</MenuItem>
-              {examEvents.map((exam) => (
-                <MenuItem key={exam._id} value={exam._id}>
-                  {exam.examType === "Other" ? exam.customExamType : exam.examType}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
+        <ResultsTabNavigation tabValue={tabValue} setTabValue={setTabValue} />
 
-          <Box>
-            <InputLabel className="block text-sm font-medium text-gray-700 mb-1">
-              Select Class
-            </InputLabel>
-            <Select
-              fullWidth
-              value={selectedClass?._id || ""}
-              onChange={(e) => setSelectedClass(classes.find((cls) => cls._id === e.target.value))}
-              disabled={!selectedEvent}
-              displayEmpty
-            >
-              <MenuItem value="">Select a class</MenuItem>
-              {classes.map((cls) => (
-                <MenuItem key={cls._id} value={cls._id}>
-                  {cls.name} - {cls.division}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
+        {/* Tab Panel 0: Submitted Excel Results */}
+        <TabPanel value={tabValue} index={0}>
+          <SubmittedResultsTab
+            selectedClass={selectedClass}
+            selectedAcademicYear={selectedAcademicYear}
+            setSelectedAcademicYear={setSelectedAcademicYear}
+            availableAcademicYears={availableAcademicYears}
+            classes={classes}
+            setSelectedClass={setSelectedClass}
+            submittedResults={submittedResults}
+            setSubmittedResults={setSubmittedResults}
+            loading={loading}
+            setLoading={setLoading}
+            verifying={verifying}
+            setVerifying={setVerifying}
+            error={error}
+            setError={setError}
+            successMessage={successMessage}
+            setSuccessMessage={setSuccessMessage}
+          />
+        </TabPanel>
 
-          <Box className="flex items-end">
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                handleFetchResults();
-                handleFetchUnpublishedMarksheets();
-              }}
-              disabled={!selectedClass || loading}
-            >
-              {loading ? <CircularProgress size={24} /> : "View Results"}
-            </Button>
-          </Box>
-        </Box>
+        {/* Tab Panel 1: All Marksheets */}
+        <TabPanel value={tabValue} index={1}>
+          <AllMarksheetsTab
+            selectedClass={selectedClass}
+            selectedAcademicYear={selectedAcademicYear}
+            setSelectedAcademicYear={setSelectedAcademicYear}
+            availableAcademicYears={availableAcademicYears}
+            classes={classes}
+            setSelectedClass={setSelectedClass}
+            marksheets={marksheets}
+            setMarksheets={setMarksheets}
+            loading={loading}
+            setLoading={setLoading}
+            error={error}
+            setError={setError}
+            successMessage={successMessage}
+            setSuccessMessage={setSuccessMessage}
+          />
+        </TabPanel>
 
-        <ExcelUpload
-          examEventId={selectedEvent?._id}
-          classId={selectedClass?._id}
-          onUploadSuccess={handleExcelUploadSuccess}
-        />
+        {/* Tab Panel 2: Published Marksheets */}
+        <TabPanel value={tabValue} index={2}>
+          <PublishedMarksheetsTab
+            selectedClass={selectedClass}
+            selectedAcademicYear={selectedAcademicYear}
+            setSelectedAcademicYear={setSelectedAcademicYear}
+            availableAcademicYears={availableAcademicYears}
+            classes={classes}
+            setSelectedClass={setSelectedClass}
+            loading={loading}
+            setLoading={setLoading}
+            error={error}
+            setError={setError}
+            successMessage={successMessage}
+            setSuccessMessage={setSuccessMessage}
+          />
+        </TabPanel>
 
-        {results.length > 0 && (
-          <>
-            <ResultsTable results={results} onPublish={handlePublishMarksheet} />
-          </>
-        )}
+        {/* Tab Panel 3: Unpublished Marksheets */}
+        <TabPanel value={tabValue} index={3}>
+          <UnpublishedMarksheetsTab
+            selectedClass={selectedClass}
+            selectedAcademicYear={selectedAcademicYear}
+            setSelectedAcademicYear={setSelectedAcademicYear}
+            availableAcademicYears={availableAcademicYears}
+            classes={classes}
+            setSelectedClass={setSelectedClass}
+            loading={loading}
+            setLoading={setLoading}
+            error={error}
+            setError={setError}
+            successMessage={successMessage}
+            setSuccessMessage={setSuccessMessage}
+          />
+        </TabPanel>
 
-        {unpublishedMarksheets.length > 0 && (
-          <UnpublishedMarksheetsTable marksheets={unpublishedMarksheets} onPublish={handlePublishMarksheet} />
-        )}
+        {/* Tab Panel 4: Student Marksheet */}
+        <TabPanel value={tabValue} index={4}>
+          <StudentMarksheetTab
+            selectedAcademicYear={selectedAcademicYear}
+            setSelectedAcademicYear={setSelectedAcademicYear}
+            availableAcademicYears={availableAcademicYears}
+            loading={loading}
+            setLoading={setLoading}
+            error={error}
+            setError={setError}
+            successMessage={successMessage}
+            setSuccessMessage={setSuccessMessage}
+          />
+        </TabPanel>
 
-        {(results.length === 0 && unpublishedMarksheets.length === 0 && !loading && selectedClass) && (
-          <Box className="text-center text-gray-500 mt-8">
-            No results or unpublished marksheets found for the selected class and exam event.
-          </Box>
-        )}
+        {/* Tab Panel 5: Legacy Exam Results */}
+        <TabPanel value={tabValue} index={5}>
+          <LegacyExamResultsTab
+            examEvents={examEvents}
+            selectedExamEvent={selectedEvent}
+            setSelectedExamEvent={setSelectedEvent}
+            results={results}
+            setResults={setResults}
+            unpublishedMarksheets={unpublishedMarksheets}
+            setUnpublishedMarksheets={setUnpublishedMarksheets}
+            loading={loading}
+            setLoading={setLoading}
+            error={error}
+            setError={setError}
+            successMessage={successMessage}
+            setSuccessMessage={setSuccessMessage}
+            handleFetchResults={handleFetchResults}
+            handleFetchUnpublishedMarksheets={handleFetchUnpublishedMarksheets}
+          />
+        </TabPanel>
       </Box>
     </AdminLayout>
   );
