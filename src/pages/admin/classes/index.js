@@ -3,7 +3,7 @@ import AdminLayout from "../../../components/layout/AdminLayout";
 import AdminService from "../../../services/adminService";
 import ClassManagementTable from "../../../components/admin/ClassManagement";
 import ClassFormModal from "../../../components/admin/ClassFormModal";
-import { Button } from "@mui/material";
+import { Button, Alert, Snackbar } from "@mui/material";
 
 const ClassesPage = () => {
   const [classes, setClasses] = useState([]);
@@ -15,6 +15,11 @@ const ClassesPage = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
+
+  // error and success handling
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -35,18 +40,50 @@ const ClassesPage = () => {
 
   const handleFormSubmit = async (classData) => {
     try {
+      // Clear previous messages
+      setError(null);
+      setSuccessMessage(null);
+      setSnackbarOpen(false);
+
+      let response;
       if (selectedClass) {
-        await AdminService.updateClass(selectedClass._id, classData);
+        response = await AdminService.updateClass(selectedClass._id, classData);
+        setSuccessMessage(`✅ Class "${response.name} ${response.division}" updated successfully!`);
       } else {
-        await AdminService.createClass(classData);
+        response = await AdminService.createClass(classData);
+        setSuccessMessage(`✅ Class "${response.name} ${response.division}" created successfully!`);
       }
 
-      const response = await AdminService.getClasses();
-      setClasses(response.data);
+      // Refresh classes list
+      const classesResponse = await AdminService.getClasses();
+      setClasses(classesResponse.data);
 
-      setIsModalOpen(false); // Closes modal after successful submission
+      setIsModalOpen(false);
+      setSelectedClass(null);
+      setSnackbarOpen(true);
     } catch (error) {
       console.error("Error saving class:", error);
+
+      // Clear success message and set error
+      setSuccessMessage(null);
+
+      // Handle specific API error responses
+      if (error.response?.status === 404) {
+        setError("❌ Class not found. Please refresh the page and try again.");
+      } else if (error.response?.status === 400) {
+        const errorMessage = error.response.data?.error || "Invalid class data provided.";
+        if (errorMessage.includes("already exists")) {
+          setError(`❌ ${errorMessage}`);
+        } else {
+          setError(`❌ ${errorMessage}`);
+        }
+      } else if (error.response?.status === 500) {
+        setError("❌ Server error occurred. Please try again later.");
+      } else {
+        setError(`❌ Failed to ${selectedClass ? 'update' : 'create'} class: ${error.response?.data?.error || error.message}`);
+      }
+
+      setSnackbarOpen(true);
     }
   };
 
@@ -103,10 +140,38 @@ const ClassesPage = () => {
 
         <ClassFormModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedClass(null);
+            setError(null);
+          }}
           classData={selectedClass}
           onSubmit={handleFormSubmit}
         />
+
+        {/* Success/Error Snackbar */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={() => {
+            setSnackbarOpen(false);
+            setError(null);
+            setSuccessMessage(null);
+          }}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={() => {
+              setSnackbarOpen(false);
+              setError(null);
+              setSuccessMessage(null);
+            }}
+            severity={error ? 'error' : 'success'}
+            variant="filled"
+          >
+            {error || successMessage}
+          </Alert>
+        </Snackbar>
       </div>
     </AdminLayout>
   );

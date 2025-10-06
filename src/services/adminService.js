@@ -96,8 +96,9 @@ const AdminService = {
   createClass: (classData) => api.post("/admin/classes", classData),
   getClasses: () => api.get("/admin/classes"),
   getClass: (classId) => api.get(`/admin/classes/${classId}`),
+  updateClass: (classId, classData) => api.patch(`/admin/classes/${classId}`, classData).then((res) => res.data),
   // getAvailableClasses: () => api.get("/admin/available-classes"),
-  getAvailableClasses: () => 
+  getAvailableClasses: () =>
     api.get("/admin/available-classes")
       .then((res) => res.data),
 
@@ -106,10 +107,18 @@ const AdminService = {
     api.post("/admin/teachers", teacherData)
       .then((res) => res.data),
 
-  getTeachers: () => api.get("/admin/teachers").then((res) => res.data),
+  getTeachers: () => 
+    api.get("/admin/teachers")
+      .then((res) => res.data),
+
   updateTeacherAssignments: (teacherId, assignments) =>
     api.put(`/admin/teachers/${teacherId}/assignments`, assignments)
       .then((res) => res.data),
+
+  deleteTeacher: (teacherId) => 
+    api.delete(`/admin/teachers/${teacherId}`)
+      .then((res) => res.data),
+
   getTeacherAssignments: () =>
     api.get("/admin/teacher-assignments")
       .then((res) => res.data),

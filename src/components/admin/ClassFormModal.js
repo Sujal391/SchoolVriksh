@@ -38,7 +38,9 @@ const ClassFormModal = ({ isOpen, onClose, classData, onSubmit }) => {
     if (isOpen) {
       fetchTeachers();
 
-      setFormData({
+      console.log("Populating form with classData:", classData);
+
+      const newFormData = {
         name: classData?.name || "",
         division: classData?.division || "",
         capacity: classData?.capacity || 30,
@@ -47,7 +49,10 @@ const ClassFormModal = ({ isOpen, onClose, classData, onSubmit }) => {
           `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
         rteSeats: classData?.rteSeats?.total || 0,
         classTeacher: classData?.classTeacher?._id || "",
-      });
+      };
+
+      console.log("Setting form data:", newFormData);
+      setFormData(newFormData);
 
       setErrorMessage(""); // Reset error message when opening modal
     }
@@ -67,15 +72,36 @@ const ClassFormModal = ({ isOpen, onClose, classData, onSubmit }) => {
       return;
     }
 
-    await onSubmit({
-      ...formData,
-      rteSeats: {
-        total: parseInt(formData.rteSeats),
-        occupied: 0,
-      },
-    });
+    try {
+      setErrorMessage(""); // Clear any previous errors
 
-    onClose();
+      // Prepare the data to submit
+      const submitData = {
+        name: formData.name,
+        division: formData.division,
+        academicYear: formData.academicYear,
+        capacity: parseInt(formData.capacity),
+        rteSeats: {
+          total: parseInt(formData.rteSeats),
+          occupied: classData?.rteSeats?.occupied || 0, // Preserve existing occupied value for updates
+        },
+      };
+
+      // Only include classTeacher if one is selected
+      if (formData.classTeacher) {
+        submitData.classTeacher = formData.classTeacher;
+      }
+
+      console.log("Submitting class data:", submitData);
+      console.log("Original class data:", classData);
+
+      await onSubmit(submitData);
+      onClose();
+    } catch (error) {
+      // Handle any errors that bubble up from the parent component
+      console.error("Error in form submission:", error);
+      setErrorMessage("An error occurred while saving the class. Please try again.");
+    }
   };
 
   return (
