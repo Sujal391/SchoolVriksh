@@ -162,6 +162,7 @@ const UnpublishedMarksheetsTab = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
+                {/* {unpublishedMarksheets.unpublishedMarksheets?.filter((marksheet) => marksheet.status === 'unpublished').map((marksheet) => (  -----this filters out not generated marksheets ------ */}
                 {unpublishedMarksheets.unpublishedMarksheets?.map((marksheet) => (
                   <tr key={marksheet.student.id} className="hover:bg-gray-50">
                     <td className="px-4 py-2 whitespace-nowrap">
