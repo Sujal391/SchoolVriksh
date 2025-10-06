@@ -165,7 +165,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import TeacherTable from '../../../components/admin/TeacherManagement';
 import AssignTeacherModal from '../../../components/admin/AssignTeacherModal';
 import CreateTeacherModal from '../../../components/admin/CreateTeacherModal';
-import { Button } from '@mui/material';
+import { Button, Alert, Snackbar } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 
 const TeachersPage = () => {
   const [teachers, setTeachers] = useState([]);
@@ -173,6 +174,10 @@ const TeachersPage = () => {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [teacherToDelete, setTeacherToDelete] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, severity: 'success', message: '' });
   const { user } = useAuth();
 
   // pagination state
@@ -243,6 +248,36 @@ const TeachersPage = () => {
     setIsCreateModalOpen(false);
   };
 
+  const handleDeleteClick = (teacher) => {
+    setTeacherToDelete(teacher);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setTeacherToDelete(null);
+    setDeleteDialogOpen(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await AdminService.deleteTeacher(teacherToDelete._id);
+      await fetchTeachers();
+      setTeacherToDelete(null);
+      setDeleteDialogOpen(false);
+      setIsDeleting(false);
+      setSnackbar({ open: true, severity: 'success', message: 'Teacher deleted successfully.' });
+    } catch (error) {
+      console.error('Error deleting teacher:', error);
+      setSnackbar({ open: true, severity: 'error', message: 'Failed to delete teacher: ' + error.message });
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   // slice teachers for pagination
   const paginatedTeachers = teachers.slice(
     (page - 1) * rowsPerPage,
@@ -267,6 +302,7 @@ const TeachersPage = () => {
           teachers={paginatedTeachers}
           loading={loading}
           onAssignClick={handleAssignClick}
+          onDeleteClick={handleDeleteClick}
           page={page}
           rowsPerPage={rowsPerPage}
           totalPages={totalPages}
@@ -286,6 +322,61 @@ const TeachersPage = () => {
           onClose={() => setIsCreateModalOpen(false)}
           onTeacherCreated={handleTeacherCreated}
         />
+
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={handleCloseDeleteDialog}
+          aria-labelledby="delete-dialog-title"
+          aria-describedby="delete-dialog-description"
+        >
+          <DialogTitle id="delete-dialog-title">
+            Confirm Delete Teacher
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="delete-dialog-description">
+              Are you sure you want to delete teacher{' '}
+              <strong>{teacherToDelete?.name}</strong>?
+              <br />
+              <br />
+              This action cannot be undone. All assignments and related data will be removed.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={handleCloseDeleteDialog} 
+              disabled={isDeleting}
+              color="inherit"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmDelete}
+              color="error"
+              variant="contained"
+              disabled={isDeleting}
+              autoFocus
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+
       </div>
     </AdminLayout>
   );
