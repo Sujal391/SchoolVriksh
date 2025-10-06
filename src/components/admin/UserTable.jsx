@@ -15,7 +15,10 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  IconButton,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { ROLE_COLORS } from "../../utils/constants";
 import EmptyState from "../common/EmptyState";
 
@@ -28,6 +31,7 @@ const UserTable = ({
   onPageChange,
   onRowsPerPageChange,
   onEditClick,
+  onDeleteClick,
 }) => {
   const handleChangePage = (event, newPage) => {
     onPageChange(newPage);
@@ -49,20 +53,19 @@ const UserTable = ({
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
-
           <TableBody>
             {loading ? (
               <TableRow>
-              <TableCell colSpan={4}>
-                <EmptyState loading loadingMessage="Loading users..." />
-              </TableCell>
-            </TableRow>
-          ) : users.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={4}>
-                <EmptyState message="No users found" />
-              </TableCell>
-            </TableRow>
+                <TableCell colSpan={4}>
+                  <EmptyState loading loadingMessage="Loading users..." />
+                </TableCell>
+              </TableRow>
+            ) : users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4}>
+                  <EmptyState message="No users found" />
+                </TableCell>
+              </TableRow>
             ) : (
               users.map((user) => (
                 <TableRow key={user._id}>
@@ -83,12 +86,23 @@ const UserTable = ({
                     </span>
                   </TableCell>
                   <TableCell>
-                    <button
-                      className="bg-blue-600 text-white px-3 py-1 rounded"
+                    <IconButton
+                      color="primary"
+                      size="small"
                       onClick={() => onEditClick(user)}
+                      title="Edit user"
                     >
-                      Edit
-                    </button>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      color="error"
+                      size="small"
+                      onClick={() => onDeleteClick(user._id)}
+                      title="Delete user"
+                      sx={{ ml: 1 }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))
@@ -96,7 +110,6 @@ const UserTable = ({
           </TableBody>
         </Table>
       </TableContainer>
-
       <Box
         display="flex"
         justifyContent="space-between"
@@ -108,14 +121,12 @@ const UserTable = ({
         <Typography variant="subtitle1">
           Page {page} of {totalPages}
         </Typography>
-
         <Pagination
           count={totalPages}
           page={page}
           onChange={handleChangePage}
           color="primary"
         />
-
         <FormControl size="small" sx={{ minWidth: 120 }}>
           <InputLabel>Rows per page</InputLabel>
           <Select

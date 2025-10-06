@@ -91,6 +91,9 @@ const AdminService = {
   getUser: (userId) => api.get(`/admin/users/${userId}`),
   updateUserRole: (userId, roleData) =>
     api.put(`/admin/users/${userId}/role`, roleData),
+  updateUser: (userId, userData) =>
+    api.put(`/admin/staff/${userId}`, userData),
+  deleteUser: (userId) => api.delete(`/admin/staff/${userId}`),
 
   // Class Management
   createClass: (classData) => api.post("/admin/classes", classData),

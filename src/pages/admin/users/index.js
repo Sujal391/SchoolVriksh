@@ -5,11 +5,13 @@ import AdminService from "../../../services/adminService";
 import { useAuth } from "../../../contexts/AuthContext";
 import UserTable from "../../../components/admin/UserTable";
 import CreateUserModal from "../../../components/admin/CreateUserModal";
+import EditUserModal from "../../../components/admin/EditUserModal";
 
 const UsersPage = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const { user } = useAuth();
   const [page, setPage] = useState(1);
@@ -37,25 +39,49 @@ const UsersPage = () => {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    const pages = Math.ceil(allUsers.length / rowsPerPage);
+    setTotalPages(pages);
+  }, [allUsers.length, rowsPerPage]);
+
   const handlePageChange = (newPage) => {
     setPage(newPage);
   };
 
   const handleRowsPerPageChange = (newRowsPerPage) => {
     setRowsPerPage(newRowsPerPage);
-    setPage(1);  // Reset to first page
+    setPage(1);
     const pages = Math.ceil(allUsers.length / newRowsPerPage);
     setTotalPages(pages);
   };
 
   const handleEditClick = (user) => {
     setSelectedUser(user);
-    alert("Edit functionality to be implemented");
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteClick = async (userId) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        await AdminService.deleteUser(userId);
+        fetchUsers();
+        alert("User deleted successfully");
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        alert(error.response?.data?.message || "Failed to delete user");
+      }
+    }
   };
 
   const handleUserCreated = () => {
     fetchUsers();
     setIsCreateModalOpen(false);
+  };
+
+  const handleUserUpdated = () => {
+    fetchUsers();
+    setIsEditModalOpen(false);
+    setSelectedUser(null);
   };
 
   const paginatedUsers = allUsers.slice(
@@ -86,12 +112,23 @@ const UsersPage = () => {
           onPageChange={handlePageChange}
           onRowsPerPageChange={handleRowsPerPageChange}
           onEditClick={handleEditClick}
+          onDeleteClick={handleDeleteClick}
         />
 
         <CreateUserModal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onUserCreated={handleUserCreated}
+        />
+
+        <EditUserModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedUser(null);
+          }}
+          user={selectedUser}
+          onUserUpdated={handleUserUpdated}
         />
       </div>
     </AdminLayout>
