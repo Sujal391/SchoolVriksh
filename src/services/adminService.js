@@ -135,6 +135,12 @@ const AdminService = {
   getSubjectsByClass: (classId) =>
     api.get(`/admin/classes/${classId}/subjects`),
   getAllSubjects: () => api.get("/admin/subjects"),
+  updateSubject: (subjectId, subjectData) =>
+    api.put(`/admin/subjects/${subjectId}`, subjectData).then((res) => res.data),
+  deleteSubject: (subjectId) =>
+    api.delete(`/admin/subjects/${subjectId}`).then((res) => res.data),
+  reassignSubject: (reassignData) =>
+    api.post("/admin/teachers/reassign-subject", reassignData).then((res) => res.data),
   uploadSyllabus: (subjectId, formData) =>
     api.post(`/admin/subjects/${subjectId}/syllabus`, formData),
 
