@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import EmptyState from '../common/EmptyState';
 
-const SubjectTable = ({ subjects, onEdit, onDelete, loading }) => {
+const SubjectTable = ({ subjects, onEdit, onDelete, onManageSyllabus, loading }) => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -104,7 +104,7 @@ const SubjectTable = ({ subjects, onEdit, onDelete, loading }) => {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Box className="flex gap-2">
+                    <Box className="flex gap-1 flex-wrap">
                       <Button
                         variant="contained"
                         color="primary"
@@ -112,6 +112,14 @@ const SubjectTable = ({ subjects, onEdit, onDelete, loading }) => {
                         onClick={() => onEdit(subject)}
                       >
                         Edit
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        size="small"
+                        onClick={() => onManageSyllabus && onManageSyllabus(subject)}
+                      >
+                        Syllabus
                       </Button>
                       <Button
                         variant="contained"

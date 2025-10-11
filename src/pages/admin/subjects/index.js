@@ -3,10 +3,39 @@ import AdminLayout from "../../../components/layout/AdminLayout";
 import AdminService from "../../../services/adminService";
 import SubjectTable from "../../../components/admin/SubjectManagement";
 import SubjectFormModal from "../../../components/admin/SubjectFormModal";
+import SyllabusManagement from "../../../components/admin/SyllabusManagement";
 
-import { Button, Alert, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Snackbar } from "@mui/material";
+import {
+  Button,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
+  Snackbar,
+  Tabs,
+  Tab,
+  Box,
+  Paper
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import IconButton from "@mui/material/IconButton";
+
+// Tab Panel Component
+const TabPanel = ({ children, value, index, ...other }) => {
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`subject-tabpanel-${index}`}
+      aria-labelledby={`subject-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+    </div>
+  );
+};
 
 const SubjectsPage = () => {
   const [subjects, setSubjects] = useState([]);
@@ -22,6 +51,10 @@ const SubjectsPage = () => {
   const [subjectToDelete, setSubjectToDelete] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  // Tab state
+  const [tabValue, setTabValue] = useState(0);
+  const [selectedSubjectForSyllabus, setSelectedSubjectForSyllabus] = useState(null);
   
   // Function to show error message with a timeout
   const showErrorMessage = (message) => {
@@ -134,6 +167,11 @@ const SubjectsPage = () => {
 
 
 
+  const handleManageSyllabus = (subject) => {
+    setSelectedSubjectForSyllabus(subject);
+    setTabValue(1); // Switch to syllabus tab
+  };
+
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
@@ -174,15 +212,46 @@ const SubjectsPage = () => {
           </Alert>
         )}
 
-        <SubjectTable
-          subjects={subjects}
-          loading={loading}
-          onEdit={(subject) => {
-            setSelectedSubject(subject);
-            setIsModalOpen(true);
-          }}
-          onDelete={handleDeleteSubject}
-        />
+        {/* Tab Navigation */}
+        <Paper sx={{ mb: 3 }}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs
+              value={tabValue}
+              onChange={(e, newValue) => setTabValue(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+            >
+              <Tab label="Subject Management" />
+              <Tab label="Syllabus Management" />
+            </Tabs>
+          </Box>
+
+          {/* Tab Panel 0: Subject Management */}
+          <TabPanel value={tabValue} index={0}>
+            <SubjectTable
+              subjects={subjects}
+              loading={loading}
+              onEdit={(subject) => {
+                setSelectedSubject(subject);
+                setIsModalOpen(true);
+              }}
+              onDelete={handleDeleteSubject}
+              onManageSyllabus={handleManageSyllabus}
+            />
+          </TabPanel>
+
+          {/* Tab Panel 1: Syllabus Management */}
+          <TabPanel value={tabValue} index={1}>
+            <SyllabusManagement
+              selectedSubject={selectedSubjectForSyllabus}
+              onClose={() => {
+                setSelectedSubjectForSyllabus(null);
+                setTabValue(0);
+              }}
+            />
+          </TabPanel>
+        </Paper>
 
         <SubjectFormModal
           isOpen={isModalOpen}
