@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import EmptyState from '../common/EmptyState';
 
-const SubjectTable = ({ subjects, onEdit, loading }) => {
+const SubjectTable = ({ subjects, onEdit, onDelete, loading }) => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -104,13 +104,24 @@ const SubjectTable = ({ subjects, onEdit, loading }) => {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => onEdit(subject)}
-                    >
-                      Edit
-                    </Button>
+                    <Box className="flex gap-2">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => onEdit(subject)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        size="small"
+                        onClick={() => onDelete(subject)}
+                      >
+                        Delete
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))

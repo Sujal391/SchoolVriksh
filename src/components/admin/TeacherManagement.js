@@ -18,6 +18,8 @@ import {
   Chip,
   IconButton,
 } from "@mui/material";
+import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
+import PublishedWithChangesIcon from "@mui/icons-material/PublishedWithChanges";
 import DeleteIcon from '@mui/icons-material/Delete';
 import EmptyState from "../common/EmptyState";
 
@@ -25,6 +27,7 @@ const TeacherTable = ({
   teachers = [],
   onAssignClick,
   onDeleteClick,
+  onReassignSubjectClick,
   loading,
   page,
   rowsPerPage,
@@ -117,25 +120,38 @@ const TeacherTable = ({
                     )}
                   </TableCell>
                   <TableCell align="center">
-                    <Box display="flex" justifyContent="center" gap={1}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        onClick={() => onAssignClick(teacher)}
-                      >
-                        Assign
-                      </Button>
-                      <IconButton
-                        color="error"
-                        size="small"
-                        onClick={() => onDeleteClick(teacher)}
-                        aria-label="delete teacher"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
-                  </TableCell>
+  <Box display="flex" justifyContent="center" gap={1} flexWrap="wrap">
+    <IconButton
+      color="primary"
+      size="small"
+      onClick={() => onAssignClick(teacher)}
+      aria-label="assign teacher"
+      title="Assign Teacher"
+    >
+      <PersonAddAltIcon />
+    </IconButton>
+
+    <IconButton
+      color="secondary"
+      size="small"
+      onClick={() => onReassignSubjectClick(teacher)}
+      aria-label="reassign subject"
+      title="Reassign Subject"
+    >
+      <PublishedWithChangesIcon />
+    </IconButton>
+
+    <IconButton
+      color="error"
+      size="small"
+      onClick={() => onDeleteClick(teacher)}
+      aria-label="delete teacher"
+      title="Delete Teacher"
+    >
+      <DeleteIcon />
+    </IconButton>
+  </Box>
+</TableCell>
                 </TableRow>
               ))
             )}

@@ -135,8 +135,26 @@ const AdminService = {
   getSubjectsByClass: (classId) =>
     api.get(`/admin/classes/${classId}/subjects`),
   getAllSubjects: () => api.get("/admin/subjects"),
+  updateSubject: (subjectId, subjectData) =>
+    api.put(`/admin/subjects/${subjectId}`, subjectData).then((res) => res.data),
+  deleteSubject: (subjectId) =>
+    api.delete(`/admin/subjects/${subjectId}`).then((res) => res.data),
+  reassignSubject: (reassignData) =>
+    api.post("/admin/teachers/reassign-subject", reassignData).then((res) => res.data),
   uploadSyllabus: (subjectId, formData) =>
     api.post(`/admin/subjects/${subjectId}/syllabus`, formData),
+
+  // Timetable Management
+  getClassesWithSubjects: () =>
+    api.get("/admin/timetable/classes-with-subjects").then((res) => res.data),
+  generateTimetable: (timetableData) =>
+    api.post("/admin/timetable/generate", timetableData).then((res) => res.data),
+  getAllTimetables: () =>
+    api.get("/admin/timetable").then((res) => res.data),
+  getSpecificTimetable: (timetableId) =>
+    api.get(`/admin/timetable/${timetableId}`).then((res) => res.data),
+  downloadTimetablePDF: (timetableId) =>
+    api.get(`/admin/timetable/${timetableId}/download`, { responseType: 'blob' }),
 
   // Exam Management - FIXED
   createExamSchedule: (examData) => api.post("/admin/schedule", examData),
@@ -347,10 +365,11 @@ getExamSchedules: (params = {}) => {
   getAttendanceReport: (params) => api.get("/admin/attendance", { params }),
 
   // Leave Management
-  getPendingLeaveRequests: () => api.get("/admin/leave-requests/pending"),
+  getPendingLeaveRequests: () => api.get("admin/leave-requests/pending"),
   reviewLeaveRequest: (leaveId, decision) =>
-    api.put(`/admin/leave-requests/${leaveId}/review`, decision),
-  getLeaveRequestHistory: () => api.get("/admin/leave-requests/history"),
+    api.put(`admin/leave-requests/${leaveId}/review`, decision),
+  getLeaveRequestHistory: () => api.get("admin/leave-requests/history"),
+  deleteLeaveRequest: (leaveId) => api.delete(`admin/leave-requests/${leaveId}`),
 
   // Daily Work
   getDailyWork: () => api.get("/admin/daily-work"),

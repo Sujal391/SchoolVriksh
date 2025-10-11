@@ -165,6 +165,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import TeacherTable from '../../../components/admin/TeacherManagement';
 import AssignTeacherModal from '../../../components/admin/AssignTeacherModal';
 import CreateTeacherModal from '../../../components/admin/CreateTeacherModal';
+import ReassignSubjectModal from '../../../components/admin/ReassignSubjectModal';
 import { Button, Alert, Snackbar } from '@mui/material';
 import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 
@@ -173,7 +174,9 @@ const TeachersPage = () => {
   const [loading, setLoading] = useState(true);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [teacherToReassign, setTeacherToReassign] = useState(null);
   const [teacherToDelete, setTeacherToDelete] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -190,10 +193,16 @@ const TeachersPage = () => {
       setLoading(true);
       const response = await AdminService.getTeachers();
       const data = response.data || [];
-      setTeachers(data);
+      
+      // Normalize the data: rename 'assignments' to 'currentAssignments' if needed
+      const normalizedData = data.map(teacher => ({
+        ...teacher,
+        currentAssignments: teacher.currentAssignments || teacher.assignments
+      }));
+      
+      setTeachers(normalizedData);
 
-      // compute total pages
-      const pages = Math.ceil(data.length / rowsPerPage) || 1;
+      const pages = Math.ceil(normalizedData.length / rowsPerPage) || 1;
       setTotalPages(pages);
     } catch (error) {
       console.error('Error fetching teachers:', error);
@@ -206,7 +215,7 @@ const TeachersPage = () => {
 
   useEffect(() => {
     fetchTeachers();
-  }, [rowsPerPage]); // update total pages when rowsPerPage changes
+  }, [rowsPerPage]);
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
@@ -214,7 +223,7 @@ const TeachersPage = () => {
 
   const handleRowsPerPageChange = (newRowsPerPage) => {
     setRowsPerPage(newRowsPerPage);
-    setPage(1); // reset to first page
+    setPage(1);
     const pages = Math.ceil(teachers.length / newRowsPerPage) || 1;
     setTotalPages(pages);
   };
@@ -224,28 +233,54 @@ const TeachersPage = () => {
     setIsAssignModalOpen(true);
   };
 
-  const handleAssignmentSubmit = async (assignments) => {
+  const handleAssignmentSubmit = async (payload) => {
     try {
-      const { classTeacherOf, subjectAssignments } = assignments;
-      
-      const payload = {
-        classTeacherOf: classTeacherOf || null,
-        addSubjectAssignments: subjectAssignments,
-        removeSubjectAssignments: selectedTeacher.currentAssignments?.subjectTeacher || []
-      };
+      // The payload already comes in the correct format from AssignTeacherModal:
+      // {
+      //   classTeacherOf: "classId" (optional),
+      //   removeClassTeacherRole: true/false (optional),
+      //   addSubjectAssignments: [{ classId, subjectId }] (optional),
+      //   removeSubjectAssignments: [{ classId, subjectId }] (optional)
+      // }
 
       await AdminService.updateTeacherAssignments(selectedTeacher._id, payload);
+      
+      setSnackbar({
+        open: true,
+        severity: 'success',
+        message: '✅ Teacher assignments updated successfully!'
+      });
+
       await fetchTeachers();
       setIsAssignModalOpen(false);
+      setSelectedTeacher(null);
+
     } catch (error) {
       console.error('Error updating assignments:', error);
-      alert('Failed to update assignments: ' + error.message);
+      
+      let errorMessage = 'Failed to update assignments. Please try again.';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setSnackbar({
+        open: true,
+        severity: 'error',
+        message: `❌ ${errorMessage}`
+      });
     }
   };
 
   const handleTeacherCreated = (newTeacher) => {
     setTeachers(prev => [...prev, newTeacher]);
     setIsCreateModalOpen(false);
+    setSnackbar({
+      open: true,
+      severity: 'success',
+      message: '✅ Teacher created successfully!'
+    });
   };
 
   const handleDeleteClick = (teacher) => {
@@ -258,6 +293,43 @@ const TeachersPage = () => {
     setDeleteDialogOpen(false);
   };
 
+  const handleReassignSubjectClick = (teacher) => {
+    setTeacherToReassign(teacher);
+    setIsReassignModalOpen(true);
+  };
+
+  const handleReassignSubmit = async (reassignData) => {
+    try {
+      await AdminService.reassignSubject(reassignData);
+      setSnackbar({
+        open: true,
+        severity: 'success',
+        message: `✅ Subject reassigned successfully from ${teacherToReassign.name}!`
+      });
+
+      await fetchTeachers();
+      setIsReassignModalOpen(false);
+      setTeacherToReassign(null);
+    } catch (error) {
+      console.error('Error reassigning subject:', error);
+
+      let errorMessage = 'Failed to reassign subject. Please try again.';
+      if (error.response?.status === 404) {
+        errorMessage = error.response?.data?.message || 'Teacher or subject not found.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Server error occurred. Please try again later.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      setSnackbar({
+        open: true,
+        severity: 'error',
+        message: `❌ ${errorMessage}`
+      });
+    }
+  };
+
   const handleConfirmDelete = async () => {
     try {
       setIsDeleting(true);
@@ -266,10 +338,18 @@ const TeachersPage = () => {
       setTeacherToDelete(null);
       setDeleteDialogOpen(false);
       setIsDeleting(false);
-      setSnackbar({ open: true, severity: 'success', message: 'Teacher deleted successfully.' });
+      setSnackbar({ 
+        open: true, 
+        severity: 'success', 
+        message: '✅ Teacher deleted successfully.' 
+      });
     } catch (error) {
       console.error('Error deleting teacher:', error);
-      setSnackbar({ open: true, severity: 'error', message: 'Failed to delete teacher: ' + error.message });
+      setSnackbar({ 
+        open: true, 
+        severity: 'error', 
+        message: `❌ Failed to delete teacher: ${error.message}` 
+      });
       setIsDeleting(false);
     }
   };
@@ -278,7 +358,6 @@ const TeachersPage = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // slice teachers for pagination
   const paginatedTeachers = teachers.slice(
     (page - 1) * rowsPerPage,
     page * rowsPerPage
@@ -298,21 +377,25 @@ const TeachersPage = () => {
           </Button>
         </div>
         
-        <TeacherTable 
+        <TeacherTable
           teachers={paginatedTeachers}
           loading={loading}
           onAssignClick={handleAssignClick}
           onDeleteClick={handleDeleteClick}
+          onReassignSubjectClick={handleReassignSubjectClick}
           page={page}
           rowsPerPage={rowsPerPage}
           totalPages={totalPages}
           onPageChange={handlePageChange}
           onRowsPerPageChange={handleRowsPerPageChange}
-        />        
+        />
         
         <AssignTeacherModal
           isOpen={isAssignModalOpen}
-          onClose={() => setIsAssignModalOpen(false)}
+          onClose={() => {
+            setIsAssignModalOpen(false);
+            setSelectedTeacher(null);
+          }}
           teacher={selectedTeacher}
           onSubmit={handleAssignmentSubmit}
         />
@@ -360,6 +443,16 @@ const TeachersPage = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        <ReassignSubjectModal
+          isOpen={isReassignModalOpen}
+          onClose={() => {
+            setIsReassignModalOpen(false);
+            setTeacherToReassign(null);
+          }}
+          teacher={teacherToReassign}
+          onSubmit={handleReassignSubmit}
+        />
 
         <Snackbar
           open={snackbar.open}

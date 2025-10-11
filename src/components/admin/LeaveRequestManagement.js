@@ -1,138 +1,265 @@
 import { useState } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Typography,
+  Box,
+  Avatar,
+  CircularProgress,
+  Alert
+} from '@mui/material';
+import {
+  MoreVert,
+  CheckCircle,
+  Cancel,
+  Comment,
+  Delete
+} from '@mui/icons-material';
 
-const LeaveRequestTable = ({ leaveRequests, onReview }) => {
-  const [comments, setComments] = useState('');
+const LeaveRequestTable = ({ leaveRequests = [], onReview, loading = false }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
   const [selectedLeave, setSelectedLeave] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [comments, setComments] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleApprove = (leaveId) => {
-    onReview(leaveId, 'approved', comments);
-    setSelectedLeave(null);
+  const handleMenuClick = (event, leave) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedLeave(leave);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleOpenDialog = () => {
+    setDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
     setComments('');
   };
 
-  const handleReject = (leaveId) => {
-    onReview(leaveId, 'rejected', comments);
-    setSelectedLeave(null);
-    setComments('');
+  const handleReview = async (status) => {
+    if (selectedLeave && onReview) {
+      try {
+        setSubmitting(true);
+        await onReview(selectedLeave.id, status, comments);
+        handleCloseDialog();
+        setComments('');
+        setSelectedLeave(null);
+      } catch (error) {
+        console.error('Error reviewing leave request:', error);
+      } finally {
+        setSubmitting(false);
+      }
+    }
   };
+
+  const handleQuickAction = async (status) => {
+    if (selectedLeave && onReview) {
+      try {
+        await onReview(selectedLeave.id, status, '');
+        handleMenuClose();
+        setSelectedLeave(null);
+      } catch (error) {
+        console.error('Error reviewing leave request:', error);
+      }
+    }
+  };
+
+  const getTypeColor = (type) => {
+    return type === 'sick' ? 'error' : 'info';
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'approved': return 'success';
+      case 'rejected': return 'error';
+      default: return 'warning';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-sm text-left text-gray-600 border">
-        <thead className="bg-gray-100 text-xs uppercase font-semibold">
-          <tr>
-            <th className="px-4 py-3 border">Teacher</th>
-            <th className="px-4 py-3 border">Type</th>
-            <th className="px-4 py-3 border">Dates</th>
-            <th className="px-4 py-3 border">Reason</th>
-            <th className="px-4 py-3 border">Status</th>
-            <th className="px-4 py-3 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {leaveRequests.map((leave) => (
-            <tr key={leave.id} className="bg-white hover:bg-gray-50">
-              <td className="px-4 py-3 border">
-                <div className="font-medium">{leave.user.name}</div>
-                <div className="text-xs text-gray-500">{leave.user.role}</div>
-              </td>
-              <td className="px-4 py-3 border">
-                <span
-                  className={`px-2 py-1 text-xs rounded font-medium ${
-                    leave.type === 'sick'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-blue-100 text-blue-700'
-                  }`}
-                >
-                  {leave.type}
-                </span>
-              </td>
-              <td className="px-4 py-3 border">
-                <div>{new Date(leave.startDate).toLocaleDateString()}</div>
-                <div className="text-xs text-gray-500 text-center">to</div>
-                <div>{new Date(leave.endDate).toLocaleDateString()}</div>
-              </td>
-              <td className="px-4 py-3 border max-w-xs truncate">{leave.reason}</td>
-              <td className="px-4 py-3 border">
-                <span className="bg-yellow-100 text-yellow-800 px-2 py-1 text-xs rounded font-medium">
-                  Pending
-                </span>
-              </td>
-              <td className="px-4 py-3 border">
-                <div className="relative">
-                  <details className="inline-block">
-                    <summary className="cursor-pointer text-blue-600 hover:underline">
-                      Actions
-                    </summary>
-                    <div className="absolute z-10 mt-2 bg-white border rounded shadow w-32">
-                      <button
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
-                        onClick={() => setSelectedLeave(leave)}
-                      >
-                        Add Comments
-                      </button>
-                      <button
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
-                        onClick={() => handleApprove(leave.id)}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
-                        onClick={() => handleReject(leave.id)}
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </details>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h5" sx={{ mb: 3, fontWeight: 600, color: '#1976d2' }}>
+        Pending Leave Requests
+      </Typography>
 
-      {/* Comments Modal */}
-      {selectedLeave && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              Add Comments for {selectedLeave.user.name}'s Leave
-            </h3>
-            <textarea
-              className="w-full p-2 border border-gray-300 rounded mb-4"
-              rows="4"
-              placeholder="Enter comments (optional)"
-              value={comments}
-              onChange={(e) => setComments(e.target.value)}
-            />
-            <div className="flex justify-end space-x-2">
-              <button
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                onClick={() => {
-                  setSelectedLeave(null);
-                  setComments('');
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                onClick={() => handleApprove(selectedLeave.id)}
-              >
-                Approve
-              </button>
-              <button
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                onClick={() => handleReject(selectedLeave.id)}
-              >
-                Reject
-              </button>
-            </div>
-          </div>
-        </div>
+      {leaveRequests.length === 0 ? (
+        <Alert severity="info">No pending leave requests found.</Alert>
+      ) : (
+        <TableContainer component={Paper} elevation={2}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                <TableCell sx={{ fontWeight: 600 }}>Employee</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Duration</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Reason</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Applied On</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {leaveRequests.map((leave) => (
+                <TableRow key={leave.id} hover>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {leave.user.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {leave.user.role}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={leave.type.toUpperCase()}
+                      color={getTypeColor(leave.type)}
+                      size="small"
+                      sx={{ fontWeight: 500 }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {formatDate(leave.startDate)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      to {formatDate(leave.endDate)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ maxWidth: 250 }}>
+                      {leave.reason}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {formatDate(leave.appliedOn)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <IconButton
+                      onClick={(e) => handleMenuClick(e, leave)}
+                      size="small"
+                    >
+                      <MoreVert />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
-    </div>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={handleOpenDialog}>
+          <Comment fontSize="small" sx={{ mr: 1 }} />
+          Add Comments & Review
+        </MenuItem>
+        <MenuItem onClick={() => handleQuickAction('approved')}>
+          <CheckCircle fontSize="small" sx={{ mr: 1, color: 'success.main' }} />
+          Quick Approve
+        </MenuItem>
+        <MenuItem onClick={() => handleQuickAction('rejected')}>
+          <Cancel fontSize="small" sx={{ mr: 1, color: 'error.main' }} />
+          Quick Reject
+        </MenuItem>
+      </Menu>
+
+      <Dialog 
+        open={dialogOpen} 
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          Review Leave Request
+          {selectedLeave && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              {selectedLeave.user.name} - {selectedLeave.user.role}
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            label="Comments (Optional)"
+            placeholder="Add your comments or feedback..."
+            value={comments}
+            onChange={(e) => setComments(e.target.value)}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCloseDialog} color="inherit" disabled={submitting}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handleReview('rejected')}
+            variant="outlined"
+            color="error"
+            startIcon={submitting ? <CircularProgress size={16} /> : <Cancel />}
+            disabled={submitting}
+          >
+            Reject
+          </Button>
+          <Button
+            onClick={() => handleReview('approved')}
+            variant="contained"
+            color="success"
+            startIcon={submitting ? <CircularProgress size={16} /> : <CheckCircle />}
+            disabled={submitting}
+          >
+            Approve
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 
