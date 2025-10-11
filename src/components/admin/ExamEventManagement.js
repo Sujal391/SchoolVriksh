@@ -89,29 +89,6 @@ const ExamEventTable = ({ examEvents, onEdit, loading, onYearChange, onAcademicY
   const allExams = getAllExams();
   const totalPages = Math.ceil(allExams.length / rowsPerPage);
 
-  console.log('=== ExamEventTable Debug ===');
-  console.log('examEvents prop:', examEvents);
-  console.log('availableAcademicYears prop:', availableAcademicYears);
-  console.log('academicYearsList:', academicYearsList);
-  console.log('allExams:', allExams);
-  console.log('allExams length:', allExams.length);
-  
-  // Log first exam in detail if exists
-  if (allExams.length > 0) {
-    console.log('=== First Exam Detail ===');
-    console.log('Full exam object:', allExams[0]);
-    console.log('exam._id:', allExams[0]._id);
-    console.log('exam.examEvent?._id:', allExams[0].examEvent?._id);
-    console.log('exam.examDate:', allExams[0].examDate);
-    console.log('exam.startDate:', allExams[0].startDate);
-    console.log('exam.endDate:', allExams[0].endDate);
-    console.log('exam.class:', allExams[0].class);
-    console.log('exam.classes:', allExams[0].classes);
-    console.log('exam.examEvent:', allExams[0].examEvent);
-    console.log('exam.academicYear:', allExams[0].academicYear);
-    console.log('Link will use ID:', allExams[0].examEvent?._id || allExams[0]._id);
-  }
-
   useEffect(() => {
     setPage(queryPage);
   }, [queryPage]);
