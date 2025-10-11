@@ -28,7 +28,8 @@ import {
   Upgrade as UpgradeIcon,
   ChevronLeft as ChevronLeftIcon,
   Assessment as ResultsIcon,
-  Description as AdmissionFormsIcon, 
+  Description as AdmissionFormsIcon,
+  CheckCircle as AttendanceIcon,
 } from "@mui/icons-material";
 import { useRouter } from "next/router";
 import Link from "next/link";
@@ -99,6 +100,12 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
     //   path: "/admin/timetable",
     //   badge: null,
     // },
+    {
+      text: "Attendance",
+      icon: <AttendanceIcon />,
+      path: "/admin/attendance",
+      badge: null,
+    },
     {
       text: "Leave Requests",
       icon: <LeaveRequestsIcon />,

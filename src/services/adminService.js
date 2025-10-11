@@ -143,6 +143,8 @@ const AdminService = {
     api.post("/admin/teachers/reassign-subject", reassignData).then((res) => res.data),
   uploadSyllabus: (subjectId, formData) =>
     api.post(`/admin/subjects/${subjectId}/syllabus`, formData),
+  getSyllabus: (subjectId) =>
+    api.get(`/admin/subjects/${subjectId}/syllabus`).then((res) => res.data),
 
   // Timetable Management
   getClassesWithSubjects: () =>
@@ -363,6 +365,8 @@ getExamSchedules: (params = {}) => {
 
   // Attendance Management
   getAttendanceReport: (params) => api.get("/admin/attendance", { params }),
+  getAttendanceOverview: () => api.get("admin/attendance/overview"),
+  getDetailedAttendance: (params) => api.get("admin/attendance", { params }),
 
   // Leave Management
   getPendingLeaveRequests: () => api.get("admin/leave-requests/pending"),
