@@ -17,7 +17,9 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  IconButton,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
 import EmptyState from "../common/EmptyState";
 
 const ClassManagementTable = ({
@@ -79,14 +81,14 @@ const ClassManagementTable = ({
                     {cls.students?.length || 0}/{cls.capacity}
                   </TableCell>
                   <TableCell align="center">
-                    <Button
-                      variant="contained"
+                    <IconButton
                       color="primary"
                       size="small"
                       onClick={() => onEdit(cls)}
+                      title="Edit Class"
                     >
-                      Edit
-                    </Button>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))

@@ -1,6 +1,5 @@
 import { Button, Typography, Card, CardContent, Grid } from '@mui/material';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
 const CertificateDetail = ({ certificate, onSendToStudent }) => {
   return (

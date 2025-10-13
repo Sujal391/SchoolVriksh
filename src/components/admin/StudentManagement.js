@@ -25,6 +25,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonIcon from "@mui/icons-material/Person";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useTheme } from "@mui/material/styles";
 
 const StudentTable = ({
@@ -166,15 +167,14 @@ const StudentTable = ({
                     )}
                   </TableCell>
                   <TableCell align="center">
-                    <Button
-                      variant="text"
+                    <IconButton
                       color="primary"
                       size="small"
                       onClick={() => handleOpen(student)}
-                      sx={{ textTransform: "none" }}
+                      title="View Student"
                     >
-                      View
-                    </Button>
+                      <VisibilityIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))
