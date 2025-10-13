@@ -398,9 +398,16 @@ getExamSchedules: (params = {}) => {
   }).then((res) => res.data),
   checkApplicationStatus: (trackingId) => api.get(`/admission/status/${trackingId}`).then((res) => res.data),
   searchApplications: (params) => api.get("/admission/applications/search", { params }).then((res) => res.data),
-  
+
    validateForm: (formUrl) => api.get(`/admission/validate-form/${formUrl}`).then((res) => res.data),
-  
+
+  // Announcement Management
+  createAnnouncement: (announcementData) =>
+    api.post("/admin/announcements", announcementData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then((res) => res.data),
+  getAnnouncements: () =>
+    api.get("/admin/announcements").then((res) => res.data),
 
 };
 

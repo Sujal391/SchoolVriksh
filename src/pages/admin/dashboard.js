@@ -149,6 +149,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
 import AdminService from '../../services/adminService';
 import StatsCard from '../../components/admin/StatsCard';
+import RecentAnnouncements from '../../components/admin/RecentAnnouncements';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -274,28 +275,11 @@ const AdminDashboard = () => {
           <div className="flex-1 min-h-0">
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 h-full">
               
-              {/* Recent Activities Section */}
+              {/* Recent Announcements Section */}
               <div className="xl:col-span-2">
                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 h-full flex flex-col">
-                  <div className="flex-shrink-0 px-4 py-3 border-b border-slate-200">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-slate-800">Recent Activities</h3>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-xs text-slate-500">Updated now</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex-1 flex items-center justify-center p-4">
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3 mx-auto">
-                        <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                      </div>
-                      <p className="text-slate-500 text-sm">No recent activities yet.</p>
-                      <p className="text-xs text-slate-400 mt-1">Activity logs will appear here</p>
-                    </div>
+                  <div className="flex-1 p-4">
+                    <RecentAnnouncements maxItems={5} compact={true} />
                   </div>
                 </div>
               </div>
@@ -394,7 +378,7 @@ const AdminDashboard = () => {
                             </svg>
                           </div>
                           <div className="min-w-0">
-                            <div className="font-medium text-slate-800 text-sm">Users</div>
+                            <div className="font-medium text-slate-800 text-sm">Manage Staff</div>
                             <div className="text-xs text-slate-600">System user management</div>
                           </div>
                         </div>

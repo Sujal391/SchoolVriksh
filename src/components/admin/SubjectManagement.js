@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -16,10 +16,20 @@ import {
   Box,
   Typography,
   Button,
-} from '@mui/material';
-import EmptyState from '../common/EmptyState';
+  IconButton,
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EmptyState from "../common/EmptyState";
 
-const SubjectTable = ({ subjects, onEdit, onDelete, onManageSyllabus, loading }) => {
+const SubjectTable = ({
+  subjects,
+  onEdit,
+  onDelete,
+  onManageSyllabus,
+  loading,
+}) => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -33,20 +43,32 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onManageSyllabus, loading })
   };
 
   const totalPages = Math.ceil(subjects.length / rowsPerPage);
-  const paginatedSubjects = subjects.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  const paginatedSubjects = subjects.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
 
   return (
     <Paper className="overflow-x-auto p-2" sx={{ mt: 2 }}>
-      
       <TableContainer>
         <Table>
           <TableHead className="bg-gray-100">
             <TableRow>
-              <TableCell><strong>Subject</strong></TableCell>
-              <TableCell><strong>Class</strong></TableCell>
-              <TableCell><strong>Academic Year</strong></TableCell>
-              <TableCell><strong>Teachers</strong></TableCell>
-              <TableCell><strong>Actions</strong></TableCell>
+              <TableCell>
+                <strong>Subject</strong>
+              </TableCell>
+              <TableCell>
+                <strong>Class</strong>
+              </TableCell>
+              <TableCell>
+                <strong>Academic Year</strong>
+              </TableCell>
+              <TableCell>
+                <strong>Teachers</strong>
+              </TableCell>
+              <TableCell>
+                <strong>Actions</strong>
+              </TableCell>
             </TableRow>
           </TableHead>
 
@@ -67,8 +89,10 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onManageSyllabus, loading })
               paginatedSubjects.map((subject) => (
                 <TableRow key={subject._id}>
                   <TableCell>{subject.name}</TableCell>
-                  <TableCell>{subject.class?.name} - {subject.class?.division}</TableCell>
-                  <TableCell>{subject.academicYear || 'N/A'}</TableCell>
+                  <TableCell>
+                    {subject.class?.name} - {subject.class?.division}
+                  </TableCell>
+                  <TableCell>{subject.academicYear || "N/A"}</TableCell>
                   <TableCell>
                     <Box display="flex" flexWrap="wrap" gap={1}>
                       {subject.teachers?.length > 0 ? (
@@ -77,11 +101,11 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onManageSyllabus, loading })
                             key={idx}
                             component="span"
                             sx={{
-                              backgroundColor: '#e3f2fd',
-                              color: '#1976d2',
-                              fontSize: '0.75rem',
-                              padding: '2px 8px',
-                              borderRadius: '12px',
+                              backgroundColor: "#e3f2fd",
+                              color: "#1976d2",
+                              fontSize: "0.75rem",
+                              padding: "2px 8px",
+                              borderRadius: "12px",
                             }}
                           >
                             {teacher.teacher.name}
@@ -91,11 +115,11 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onManageSyllabus, loading })
                         <Box
                           component="span"
                           sx={{
-                            backgroundColor: '#f5f5f5',
-                            color: '#616161',
-                            fontSize: '0.75rem',
-                            padding: '2px 8px',
-                            borderRadius: '12px',
+                            backgroundColor: "#f5f5f5",
+                            color: "#616161",
+                            fontSize: "0.75rem",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
                           }}
                         >
                           Not Assigned
@@ -103,33 +127,37 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onManageSyllabus, loading })
                       )}
                     </Box>
                   </TableCell>
-                  <TableCell>
-                    <Box className="flex gap-1 flex-wrap">
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        onClick={() => onEdit(subject)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        size="small"
-                        onClick={() => onManageSyllabus && onManageSyllabus(subject)}
-                      >
-                        Syllabus
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="error"
-                        size="small"
-                        onClick={() => onDelete(subject)}
-                      >
-                        Delete
-                      </Button>
-                    </Box>
+                  <TableCell align="center">
+                    <IconButton
+                      color="primary"
+                      size="small"
+                      onClick={() => onEdit(subject)}
+                      title="Edit Subject"
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+
+                    <IconButton
+                      color="secondary"
+                      size="small"
+                      onClick={() =>
+                        onManageSyllabus && onManageSyllabus(subject)
+                      }
+                      title="Manage Syllabus"
+                      sx={{ ml: 1 }}
+                    >
+                      <MenuBookIcon fontSize="small" />
+                    </IconButton>
+
+                    <IconButton
+                      color="error"
+                      size="small"
+                      onClick={() => onDelete(subject)}
+                      title="Delete Subject"
+                      sx={{ ml: 1 }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))
@@ -138,7 +166,14 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onManageSyllabus, loading })
         </Table>
       </TableContainer>
 
-      <Box display="flex" justifyContent="space-between" alignItems="center" px={2} mb={1} mt={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        px={2}
+        mb={1}
+        mt={2}
+      >
         <Typography variant="subtitle1">
           Page {page} of {totalPages}
         </Typography>
@@ -149,10 +184,14 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onManageSyllabus, loading })
           onChange={handleChangePage}
           color="primary"
         />
-        
+
         <FormControl size="small" sx={{ minWidth: 120 }}>
           <InputLabel>Rows per page</InputLabel>
-          <Select value={rowsPerPage} label="Rows per page" onChange={handleChangeRowsPerPage}>
+          <Select
+            value={rowsPerPage}
+            label="Rows per page"
+            onChange={handleChangeRowsPerPage}
+          >
             <MenuItem value={5}>5</MenuItem>
             <MenuItem value={10}>10</MenuItem>
             <MenuItem value={25}>25</MenuItem>
