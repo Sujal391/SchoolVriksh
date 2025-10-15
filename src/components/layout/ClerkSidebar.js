@@ -236,12 +236,6 @@ const ClerkSidebar = ({ open, onClose, variant, sx, logoSrc }) => {
       path: '/clerk/leaves',
       badge: null
     },
-    { 
-      text: 'RTE Reports', 
-      icon: <RTEReportsIcon />, 
-      path: '/clerk/rte-reports',
-      badge: null
-    }
   ];
 
   const handleItemClick = (path, hasSubItems = false) => {

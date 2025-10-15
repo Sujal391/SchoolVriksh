@@ -25,6 +25,7 @@ const AdmissionsPage = () => {
   const [tabValue, setTabValue] = useState('pending');
   const [filteredApplications, setFilteredApplications] = useState([]);
 
+  // Only fetch applications data when this page loads
   useEffect(() => {
     fetchPendingApplications();
   }, []);

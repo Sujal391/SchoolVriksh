@@ -1,4 +1,5 @@
 import { useAuth } from '../../../contexts/AuthContext';
+import { useEffect } from 'react';
 import withProtectedRoute from '../../../components/common/ProtectedRoute';
 import ClerkLayout from '../../../components/layout/ClerkLayout';
 import CertificateList from '../../../components/clerk/certificates/CertificateList';
@@ -6,7 +7,12 @@ import useClerk from '../../../hooks/useClerk';
 import { Button, Typography } from '@mui/material';
 
 const CertificatesPage = () => {
-  const { certificates, pendingCertificates, loading, error } = useClerk();
+  const { certificates, pendingCertificates, loading, error, fetchCertificateHistory } = useClerk();
+
+  // Only fetch certificate data when this page loads
+  useEffect(() => {
+    fetchCertificateHistory();
+  }, []);
 
   // Combine pending and history certificates
   const allCertificates = [...(pendingCertificates || []), ...(certificates || [])];

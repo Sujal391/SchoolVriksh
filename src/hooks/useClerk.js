@@ -17,34 +17,8 @@ const useClerk = () => {
   const [error, setError] = useState(null);
 
 
-  // // Initialize data
-  // useEffect(() => {
-  //   fetchDashboardData();
-  //   fetchPendingApplications();
-  //   fetchCertificateHistory();
-  //   fetchAvailableClasses();
-  //   console.log('=== DEBUG: useClerk useEffect triggered ===');
-  //   fetchLeaveStatus();
-  // }, []);
-
-
-  // Initialize data
-  useEffect(() => {
-    const initializeData = async () => {
-      console.log('=== DEBUG: useClerk useEffect triggered ===');
-      
-      // Run these in parallel
-      await Promise.all([
-        fetchDashboardData(),
-        fetchPendingApplications(),
-        fetchCertificateHistory(),
-        fetchAvailableClasses(),
-        fetchLeaveStatus()
-      ]);
-    };
-
-    initializeData();
-  }, []);
+  // Remove automatic initialization - let components call what they need
+  // This prevents unnecessary API calls on every page load
 
   const fetchDashboardData = async () => {
     try {
@@ -428,7 +402,8 @@ const fetchLeaveStatus = async () => {
     refreshLeaveStatus: fetchLeaveStatus,
     getStudentById,
     verifyCertificateBySerial,
-    refreshCertificates
+    refreshCertificates,
+    fetchDashboardData
   };
 };
 

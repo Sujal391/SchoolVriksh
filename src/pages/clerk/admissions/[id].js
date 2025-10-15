@@ -18,13 +18,19 @@ import useClerk from '../../../hooks/useClerk';
 const AdmissionDetailPage = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { 
-    applications, 
-    verifyApplication, 
-    loading, 
-    error 
+  const {
+    applications,
+    verifyApplication,
+    loading,
+    error,
+    fetchPendingApplications
   } = useClerk();
   const [application, setApplication] = useState(null);
+
+  // Fetch applications when page loads
+  useEffect(() => {
+    fetchPendingApplications();
+  }, []);
 
   useEffect(() => {
     if (id && applications.length > 0) {

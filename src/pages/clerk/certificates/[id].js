@@ -126,15 +126,21 @@ import { Tab, Tabs, Box, CircularProgress } from '@mui/material';
 const CertificateDetailPage = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { 
-    certificates, 
-    pendingCertificates, 
-    generateCertificate, 
-    verifyCertificateBySerial 
+  const {
+    certificates,
+    pendingCertificates,
+    generateCertificate,
+    verifyCertificateBySerial,
+    refreshCertificates
   } = useClerk();
-  
+
   const [certificate, setCertificate] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
+
+  // Fetch certificate data when page loads
+  useEffect(() => {
+    refreshCertificates();
+  }, []);
 
   useEffect(() => {
     if (id && (certificates || pendingCertificates)) {

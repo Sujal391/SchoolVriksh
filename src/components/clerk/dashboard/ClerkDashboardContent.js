@@ -1,12 +1,18 @@
 // src/components/clerk/dashboard/ClerkDashboardContent.js
 import { Box, CircularProgress, Typography } from "@mui/material";
+import { useEffect } from "react";
 import StatsCards from "./StatsCards";
 import RecentApplications from "./RecentApplications";
 import CertificateRequests from "./CertificateRequests";
 import useClerk from "../../../hooks/useClerk";
 
 const ClerkDashboardContent = () => {
-  const { dashboardData, applications, certificates, loading, error } = useClerk();
+  const { dashboardData, applications, certificates, loading, error, fetchDashboardData } = useClerk();
+
+  // Only fetch dashboard-specific data
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   if (loading)
     return (

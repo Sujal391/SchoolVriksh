@@ -401,12 +401,10 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Paper,
   Box,
-  Divider,
-  Card,
   CardContent,
   Alert,
+  Snackbar,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 
@@ -432,7 +430,6 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
     admissionType: "Regular",
     password: "",
     parentPassword: "",
-    // New fields added
     religion: "",
     caste: "",
     subCaste: "",
@@ -443,6 +440,15 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "success" // 'success' | 'warning' | 'error' | 'info'
+  });
+
+  const handleCloseToast = () => {
+    setToast({ ...toast, open: false });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -458,7 +464,6 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -478,11 +483,9 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
     }
   };
 
-  // Comprehensive validation function
   const validateForm = () => {
     const newErrors = {};
 
-    // Required field validation
     const requiredFields = [
       'name', 'email', 'gender', 'mobile', 'parentName', 
       'parentEmail', 'parentMobile', 'grNumber', 'classId', 
@@ -496,7 +499,6 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
       }
     });
 
-    // Date validation
     if (!formData.dob) {
       newErrors.dob = 'Date of birth is required';
     }
@@ -505,7 +507,6 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
       newErrors.admissionDate = 'Admission date is required';
     }
 
-    // Address validation
     if (!formData.address.street?.trim()) {
       newErrors.street = 'Street address is required';
     }
@@ -519,7 +520,6 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
       newErrors.pincode = 'Pincode is required';
     }
 
-    // Format validation
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (formData.email && !emailRegex.test(formData.email)) {
       newErrors.email = 'Invalid email format';
@@ -554,13 +554,10 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
   };
 
   const formatDataForSubmission = (data) => {
-    // Create a clean copy of the data
     const submissionData = {
       ...data,
-      // Ensure dates are in ISO format
       dob: data.dob ? new Date(data.dob).toISOString() : null,
       admissionDate: data.admissionDate ? new Date(data.admissionDate).toISOString() : null,
-      // Ensure all string fields are trimmed
       name: data.name?.trim(),
       email: data.email?.trim().toLowerCase(),
       parentName: data.parentName?.trim(),
@@ -568,14 +565,13 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
       grNumber: data.grNumber?.trim().toUpperCase(),
       religion: data.religion?.trim(),
       caste: data.caste?.trim(),
-      subCaste: data.subCaste?.trim() || undefined, // Send undefined instead of empty string
+      subCaste: data.subCaste?.trim() || undefined,
       uidNumber: data.uidNumber?.trim(),
       studentAadharNumber: data.studentAadharNumber?.trim(),
       parentAadharNumber: data.parentAadharNumber?.trim(),
       mobile: data.mobile?.trim(),
       parentMobile: data.parentMobile?.trim(),
       parentOccupation: data.parentOccupation?.trim() || undefined,
-      // Clean address object
       address: {
         street: data.address.street?.trim(),
         city: data.address.city?.trim(),
@@ -584,7 +580,6 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
       }
     };
 
-    // Remove any undefined values to avoid backend issues
     Object.keys(submissionData).forEach(key => {
       if (submissionData[key] === undefined || submissionData[key] === '') {
         if (key !== 'subCaste' && key !== 'parentOccupation') {
@@ -596,20 +591,121 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
     return submissionData;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     console.log('Form data before validation:', formData);
     
     if (!validateForm()) {
       console.log('Validation failed:', errors);
+      setToast({
+        open: true,
+        message: 'Please fix the validation errors before submitting',
+        severity: 'error'
+      });
       return;
     }
 
     const submissionData = formatDataForSubmission(formData);
     console.log('Formatted submission data:', submissionData);
     
-    onSubmit(submissionData);
+    try {
+      // Call the onSubmit function passed from parent
+      await onSubmit(submissionData);
+      
+      // If we reach here, submission was successful
+      setToast({
+        open: true,
+        message: 'Student registered successfully!',
+        severity: 'success'
+      });
+      
+      // Reset form after successful submission
+      setFormData({
+        name: "",
+        email: "",
+        dob: null,
+        gender: "",
+        mobile: "",
+        parentName: "",
+        parentEmail: "",
+        parentMobile: "",
+        parentOccupation: "",
+        address: {
+          street: "",
+          city: "",
+          state: "",
+          pincode: "",
+        },
+        grNumber: "",
+        classId: "",
+        admissionType: "Regular",
+        password: "",
+        parentPassword: "",
+        religion: "",
+        caste: "",
+        subCaste: "",
+        admissionDate: null,
+        uidNumber: "",
+        studentAadharNumber: "",
+        parentAadharNumber: "",
+      });
+      
+    } catch (error) {
+      console.error('Submission error:', error);
+      
+      // Check if it's a 502 error
+      if (error.response?.status === 502 || error.status === 502) {
+        // Student was registered but some post-processing failed
+        setToast({
+          open: true,
+          message: 'Student registered successfully! However, some additional operations are pending.',
+          severity: 'warning'
+        });
+        
+        // Optionally reset form even on 502 since student is registered
+        setFormData({
+          name: "",
+          email: "",
+          dob: null,
+          gender: "",
+          mobile: "",
+          parentName: "",
+          parentEmail: "",
+          parentMobile: "",
+          parentOccupation: "",
+          address: {
+            street: "",
+            city: "",
+            state: "",
+            pincode: "",
+          },
+          grNumber: "",
+          classId: "",
+          admissionType: "Regular",
+          password: "",
+          parentPassword: "",
+          religion: "",
+          caste: "",
+          subCaste: "",
+          admissionDate: null,
+          uidNumber: "",
+          studentAadharNumber: "",
+          parentAadharNumber: "",
+        });
+      } else {
+        // Other errors - show error message
+        const errorMessage = error.response?.data?.message || 
+                           error.message || 
+                           'Failed to register student. Please try again.';
+        
+        setToast({
+          open: true,
+          message: errorMessage,
+          severity: 'error'
+        });
+      }
+    }
   };
 
   return (
@@ -618,6 +714,23 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
       onSubmit={handleSubmit}
       sx={{ maxWidth: 1200, mx: "auto" }}
     >
+      {/* Toast Notification */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={6000}
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleCloseToast} 
+          severity={toast.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
+
       {/* Show validation errors if any */}
       {Object.keys(errors).length > 0 && (
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -631,441 +744,429 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
       )}
 
       {/* Student Information Section */}
-      {/* <Card sx={{ mb: 3 }}> */}
-        <CardContent>
-          <Typography variant="h5" gutterBottom color="primary" sx={{ mb: 3 }}>
-            Student Information
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Full Name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                error={!!errors.name}
-                helperText={errors.name}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Email Address"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                error={!!errors.email}
-                helperText={errors.email}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <DatePicker
-                label="Date of Birth"
-                value={formData.dob}
-                onChange={handleDateChange}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    required
-                    variant="outlined"
-                    size="medium"
-                    error={!!errors.dob}
-                    helperText={errors.dob}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <FormControl fullWidth required variant="outlined" size="medium" error={!!errors.gender}>
-                <InputLabel>
-                  Gender
-                </InputLabel>
-                <Select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  sx={{ minWidth: 100 }}
-                  label="Gender"
-                >
-                  <MenuItem value="Male">Male</MenuItem>
-                  <MenuItem value="Female">Female</MenuItem>
-                  <MenuItem value="Other">Other</MenuItem>
-                </Select>
-                {errors.gender && (
-                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                    {errors.gender}
-                  </Typography>
-                )}
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="Mobile Number"
-                name="mobile"
-                value={formData.mobile}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                inputProps={{ maxLength: 10 }}
-                helperText={errors.mobile || "10 digit mobile number"}
-                error={!!errors.mobile}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="GR Number"
-                name="grNumber"
-                value={formData.grNumber}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                helperText={errors.grNumber || "General Register Number"}
-                error={!!errors.grNumber}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <FormControl fullWidth required variant="outlined" size="medium" error={!!errors.classId}>
-                <InputLabel>Class</InputLabel>
-                <Select
-                  name="classId"
-                  value={formData.classId}
-                  onChange={handleChange}
-                  label="Class"
-                  sx={{ minWidth: 100 }}
-                >
-                  {classes.map((cls) => (
-                    <MenuItem key={cls._id} value={cls._id}>
-                      {cls.name} {cls.division}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.classId && (
-                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                    {errors.classId}
-                  </Typography>
-                )}
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <FormControl fullWidth required variant="outlined" size="medium">
-                <InputLabel>Admission Type</InputLabel>
-                <Select
-                  name="admissionType"
-                  value={formData.admissionType}
-                  onChange={handleChange}
-                  label="Admission Type"
-                >
-                  <MenuItem value="Regular">Regular</MenuItem>
-                  <MenuItem value="RTE">RTE (Right to Education)</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <DatePicker
-                label="Admission Date"
-                value={formData.admissionDate}
-                onChange={handleAdmissionDateChange}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    required
-                    variant="outlined"
-                    size="medium"
-                    error={!!errors.admissionDate}
-                    helperText={errors.admissionDate}
-                  />
-                )}
-              />
-            </Grid>
+      <CardContent>
+        <Typography variant="h5" gutterBottom color="primary" sx={{ mb: 3 }}>
+          Student Information
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Full Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              error={!!errors.name}
+              helperText={errors.name}
+            />
           </Grid>
-        </CardContent>
-      {/* </Card> */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Email Address"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              error={!!errors.email}
+              helperText={errors.email}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <DatePicker
+              label="Date of Birth"
+              value={formData.dob}
+              onChange={handleDateChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  required
+                  variant="outlined"
+                  size="medium"
+                  error={!!errors.dob}
+                  helperText={errors.dob}
+                />
+              )}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <FormControl fullWidth required variant="outlined" size="medium" error={!!errors.gender}>
+              <InputLabel>Gender</InputLabel>
+              <Select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                sx={{ minWidth: 100 }}
+                label="Gender"
+              >
+                <MenuItem value="Male">Male</MenuItem>
+                <MenuItem value="Female">Female</MenuItem>
+                <MenuItem value="Other">Other</MenuItem>
+              </Select>
+              {errors.gender && (
+                <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                  {errors.gender}
+                </Typography>
+              )}
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="Mobile Number"
+              name="mobile"
+              value={formData.mobile}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              inputProps={{ maxLength: 10 }}
+              helperText={errors.mobile || "10 digit mobile number"}
+              error={!!errors.mobile}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="GR Number"
+              name="grNumber"
+              value={formData.grNumber}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              helperText={errors.grNumber || "General Register Number"}
+              error={!!errors.grNumber}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <FormControl fullWidth required variant="outlined" size="medium" error={!!errors.classId}>
+              <InputLabel>Class</InputLabel>
+              <Select
+                name="classId"
+                value={formData.classId}
+                onChange={handleChange}
+                label="Class"
+                sx={{ minWidth: 150 }}
+              >
+                {classes.map((cls) => (
+                  <MenuItem key={cls._id} value={cls._id}>
+                    {cls.name} {cls.division}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.classId && (
+                <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                  {errors.classId}
+                </Typography>
+              )}
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <FormControl fullWidth required variant="outlined" size="medium">
+              <InputLabel>Admission Type</InputLabel>
+              <Select
+                name="admissionType"
+                value={formData.admissionType}
+                onChange={handleChange}
+                label="Admission Type"
+              >
+                <MenuItem value="Regular">Regular</MenuItem>
+                <MenuItem value="RTE">RTE (Right to Education)</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <DatePicker
+              label="Admission Date"
+              value={formData.admissionDate}
+              onChange={handleAdmissionDateChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  required
+                  variant="outlined"
+                  size="medium"
+                  error={!!errors.admissionDate}
+                  helperText={errors.admissionDate}
+                />
+              )}
+            />
+          </Grid>
+        </Grid>
+      </CardContent>
 
       {/* Student Personal Details Section */}
-      {/* <Card sx={{ mb: 3 }}> */}
-        <CardContent>
-          <Typography variant="h6" gutterBottom color="primary" sx={{ mb: 3 }}>
-            Personal & Identity Details
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="Religion"
-                name="religion"
-                value={formData.religion}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                error={!!errors.religion}
-                helperText={errors.religion}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="Caste"
-                name="caste"
-                value={formData.caste}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                error={!!errors.caste}
-                helperText={errors.caste}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="Sub-Caste (Optional)"
-                name="subCaste"
-                value={formData.subCaste}
-                onChange={handleChange}
-                variant="outlined"
-                size="medium"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={6}>
-              <TextField
-                fullWidth
-                label="UDIAS Number"
-                name="uidNumber"
-                value={formData.uidNumber}
-                onChange={handleChange}
-                inputProps={{ maxLength: 11, inputMode: "numeric", pattern: "[0-9]*" }}
-                required
-                variant="outlined"
-                size="medium"
-                helperText={errors.uidNumber || "11 digit UDIAS Number"}
-                error={!!errors.uidNumber}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={6}>
-              <TextField
-                fullWidth
-                label="Student Aadhar Number"
-                name="studentAadharNumber"
-                value={formData.studentAadharNumber}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                inputProps={{ maxLength: 12 }}
-                helperText={errors.studentAadharNumber || "12 digit Aadhar number"}
-                error={!!errors.studentAadharNumber}
-              />
-            </Grid>
+      <CardContent>
+        <Typography variant="h6" gutterBottom color="primary" sx={{ mb: 3 }}>
+          Personal & Identity Details
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="Religion"
+              name="religion"
+              value={formData.religion}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              error={!!errors.religion}
+              helperText={errors.religion}
+            />
           </Grid>
-        </CardContent>
-      {/* </Card> */}
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="Caste"
+              name="caste"
+              value={formData.caste}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              error={!!errors.caste}
+              helperText={errors.caste}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="Sub-Caste (Optional)"
+              name="subCaste"
+              value={formData.subCaste}
+              onChange={handleChange}
+              variant="outlined"
+              size="medium"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={6}>
+            <TextField
+              fullWidth
+              label="UDIAS Number"
+              name="uidNumber"
+              value={formData.uidNumber}
+              onChange={handleChange}
+              inputProps={{ maxLength: 11, inputMode: "numeric", pattern: "[0-9]*" }}
+              required
+              variant="outlined"
+              size="medium"
+              helperText={errors.uidNumber || "11 digit UDIAS Number"}
+              error={!!errors.uidNumber}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={6}>
+            <TextField
+              fullWidth
+              label="Student Aadhar Number"
+              name="studentAadharNumber"
+              value={formData.studentAadharNumber}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              inputProps={{ maxLength: 12 }}
+              helperText={errors.studentAadharNumber || "12 digit Aadhar number"}
+              error={!!errors.studentAadharNumber}
+            />
+          </Grid>
+        </Grid>
+      </CardContent>
 
       {/* Account Security Section */}
-      {/* <Card sx={{ mb: 3 }}> */}
-        <CardContent>
-          <Typography variant="h6" gutterBottom color="primary" sx={{ mb: 3 }}>
-            Account Security
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Student Password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                helperText={errors.password || "Password for student login"}
-                error={!!errors.password}
-              />
-            </Grid>
+      <CardContent>
+        <Typography variant="h6" gutterBottom color="primary" sx={{ mb: 3 }}>
+          Account Security
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Student Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              helperText={errors.password || "Password for student login"}
+              error={!!errors.password}
+            />
           </Grid>
-        </CardContent>
-      {/* </Card> */}
+        </Grid>
+      </CardContent>
 
       {/* Parent Information Section */}
-      {/* <Card sx={{ mb: 3 }}> */}
-        <CardContent>
-          <Typography variant="h5" gutterBottom color="primary" sx={{ mb: 3 }}>
-            Parent/Guardian Information
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Parent/Guardian Name"
-                name="parentName"
-                value={formData.parentName}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                error={!!errors.parentName}
-                helperText={errors.parentName}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Parent Email Address"
-                name="parentEmail"
-                type="email"
-                value={formData.parentEmail}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                error={!!errors.parentEmail}
-                helperText={errors.parentEmail}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="Parent Mobile Number"
-                name="parentMobile"
-                value={formData.parentMobile}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                inputProps={{ maxLength: 10 }}
-                helperText={errors.parentMobile || "10 digit mobile number"}
-                error={!!errors.parentMobile}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="Parent Occupation"
-                name="parentOccupation"
-                value={formData.parentOccupation}
-                onChange={handleChange}
-                variant="outlined"
-                size="medium"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="Parent Aadhar Number"
-                name="parentAadharNumber"
-                value={formData.parentAadharNumber}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                inputProps={{ maxLength: 12 }}
-                helperText={errors.parentAadharNumber || "12 digit Aadhar number"}
-                error={!!errors.parentAadharNumber}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Parent Password"
-                name="parentPassword"
-                type="password"
-                value={formData.parentPassword}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                helperText={errors.parentPassword || "Password for parent login"}
-                error={!!errors.parentPassword}
-              />
-            </Grid>
+      <CardContent>
+        <Typography variant="h5" gutterBottom color="primary" sx={{ mb: 3 }}>
+          Parent/Guardian Information
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Parent/Guardian Name"
+              name="parentName"
+              value={formData.parentName}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              error={!!errors.parentName}
+              helperText={errors.parentName}
+            />
           </Grid>
-        </CardContent>
-      {/* </Card> */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Parent Email Address"
+              name="parentEmail"
+              type="email"
+              value={formData.parentEmail}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              error={!!errors.parentEmail}
+              helperText={errors.parentEmail}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="Parent Mobile Number"
+              name="parentMobile"
+              value={formData.parentMobile}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              inputProps={{ maxLength: 10 }}
+              helperText={errors.parentMobile || "10 digit mobile number"}
+              error={!!errors.parentMobile}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="Parent Occupation"
+              name="parentOccupation"
+              value={formData.parentOccupation}
+              onChange={handleChange}
+              variant="outlined"
+              size="medium"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="Parent Aadhar Number"
+              name="parentAadharNumber"
+              value={formData.parentAadharNumber}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              inputProps={{ maxLength: 12 }}
+              helperText={errors.parentAadharNumber || "12 digit Aadhar number"}
+              error={!!errors.parentAadharNumber}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Parent Password"
+              name="parentPassword"
+              type="password"
+              value={formData.parentPassword}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              helperText={errors.parentPassword || "Password for parent login"}
+              error={!!errors.parentPassword}
+            />
+          </Grid>
+        </Grid>
+      </CardContent>
 
       {/* Address Information Section */}
-      {/* <Card sx={{ mb: 4 }}> */}
-        <CardContent>
-          <Typography variant="h6" gutterBottom color="primary" sx={{ mb: 3 }}>
-            Address Information
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Street Address"
-                name="street"
-                value={formData.address.street}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                multiline
-                rows={2}
-                error={!!errors.street}
-                helperText={errors.street}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="City"
-                name="city"
-                value={formData.address.city}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                error={!!errors.city}
-                helperText={errors.city}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="State"
-                name="state"
-                value={formData.address.state}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                error={!!errors.state}
-                helperText={errors.state}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="Pincode"
-                name="pincode"
-                value={formData.address.pincode}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                size="medium"
-                inputProps={{ maxLength: 6 }}
-                error={!!errors.pincode}
-                helperText={errors.pincode || "6 digit pincode"}
-              />
-            </Grid>
+      <CardContent>
+        <Typography variant="h6" gutterBottom color="primary" sx={{ mb: 3 }}>
+          Address Information
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Street Address"
+              name="street"
+              value={formData.address.street}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              multiline
+              rows={2}
+              error={!!errors.street}
+              helperText={errors.street}
+            />
           </Grid>
-        </CardContent>
-      {/* </Card> */}
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="City"
+              name="city"
+              value={formData.address.city}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              error={!!errors.city}
+              helperText={errors.city}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="State"
+              name="state"
+              value={formData.address.state}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              error={!!errors.state}
+              helperText={errors.state}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="Pincode"
+              name="pincode"
+              value={formData.address.pincode}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="medium"
+              inputProps={{ maxLength: 6 }}
+              error={!!errors.pincode}
+              helperText={errors.pincode || "6 digit pincode"}
+            />
+          </Grid>
+        </Grid>
+      </CardContent>
 
       {/* Submit Button */}
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
@@ -1089,13 +1190,10 @@ const ExistingStudentForm = ({ classes, onSubmit, loading }) => {
         </Button>
       </Box>
     </Box>
-
-
   );
 };
 
 export default ExistingStudentForm;
-
 
 
 

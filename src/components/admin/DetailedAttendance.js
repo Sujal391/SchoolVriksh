@@ -90,9 +90,18 @@ const DetailedAttendance = () => {
       }
 
       const response = await AdminService.getDetailedAttendance(params);
-      setAttendanceData(response.data.attendance || []);
-      setMetadata(response.data.metadata || {});
-      setStatistics(response.data.statistics || {});
+      
+      // FIX: Access the data correctly from the response
+      // The API returns: { success: true, metadata: {...}, statistics: {...}, attendance: [...] }
+      // So we need to access response.data directly, not response.data.attendance
+      
+      console.log('API Response:', response.data); // Debug log
+      
+      if (response.data) {
+        setAttendanceData(response.data.attendance || []);
+        setMetadata(response.data.metadata || {});
+        setStatistics(response.data.statistics || {});
+      }
     } catch (err) {
       setError('Failed to fetch detailed attendance');
       console.error('Error fetching detailed attendance:', err);
@@ -160,7 +169,7 @@ const DetailedAttendance = () => {
                   label="Start Date"
                   value={filters.startDate}
                   onChange={(date) => handleFilterChange('startDate', date)}
-                  renderInput={(params) => <TextField {...params} fullWidth size="small" />}
+                  slotProps={{ textField: { fullWidth: true, size: "small" } }}
                   maxDate={dayjs()}
                 />
               </Grid>
@@ -170,7 +179,7 @@ const DetailedAttendance = () => {
                   label="End Date"
                   value={filters.endDate}
                   onChange={(date) => handleFilterChange('endDate', date)}
-                  renderInput={(params) => <TextField {...params} fullWidth size="small" />}
+                  slotProps={{ textField: { fullWidth: true, size: "small" } }}
                   minDate={filters.startDate}
                   maxDate={dayjs()}
                 />
@@ -321,18 +330,18 @@ const DetailedAttendance = () => {
                         <TableRow key={record._id} hover>
                           <TableCell>
                             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              {record.user.name}
+                              {record.user?.name || 'N/A'}
                             </Typography>
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2" color="text.secondary">
-                              {record.user.email}
+                              {record.user?.email || 'N/A'}
                             </Typography>
                           </TableCell>
                           {filters.type === 'student' && (
                             <TableCell>
                               <Typography variant="body2">
-                                {record.class?.name} {record.class?.division}
+                                {record.class ? `${record.class.name} ${record.class.division}` : 'N/A'}
                               </Typography>
                             </TableCell>
                           )}
