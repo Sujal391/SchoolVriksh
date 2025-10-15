@@ -29,18 +29,24 @@ import ClerkLayout from '../../../components/layout/ClerkLayout';
 import StudentList from '../../../components/clerk/students/StudentList';
 import useClerk from '../../../hooks/useClerk';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 const StudentsPage = () => {
-  const { 
-    students, 
-    classes, 
-    loading, 
-    error, 
-    fetchStudentsByClass, 
-    upgradeStudentClass 
+  const {
+    students,
+    classes,
+    loading,
+    error,
+    fetchStudentsByClass,
+    fetchAvailableClasses,
+    upgradeStudentClass
   } = useClerk();
+
+  // Only fetch classes data when this page loads
+  useEffect(() => {
+    fetchAvailableClasses();
+  }, []);
   const [classId, setClassId] = useState('');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));

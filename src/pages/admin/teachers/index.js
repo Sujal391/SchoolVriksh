@@ -273,14 +273,16 @@ const TeachersPage = () => {
     }
   };
 
-  const handleTeacherCreated = (newTeacher) => {
-    setTeachers(prev => [...prev, newTeacher]);
+  const handleTeacherCreated = async (newTeacher) => {
     setIsCreateModalOpen(false);
     setSnackbar({
       open: true,
       severity: 'success',
       message: '✅ Teacher created successfully!'
     });
+
+    // Refetch all teachers to ensure proper data structure with assignments
+    await fetchTeachers();
   };
 
   const handleDeleteClick = (teacher) => {

@@ -72,11 +72,12 @@ import { useEffect } from 'react';
 
 
 const LeavesPage = () => {
-  const { leaveStatus, leaveLoading, leaveError } = useClerk(); // Use leave-specific states
+  const { leaveStatus, leaveLoading, leaveError, refreshLeaveStatus } = useClerk(); // Use leave-specific states
 
-  // Debug logging
+  // Only fetch leave data when this page loads
   useEffect(() => {
-  }, [leaveStatus, leaveLoading, leaveError]);
+    refreshLeaveStatus();
+  }, []);
 
   return (
     <ClerkLayout>

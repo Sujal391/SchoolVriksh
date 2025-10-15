@@ -615,72 +615,82 @@ const ExamEventFormModal = ({ isOpen, onClose, examData, classes, onSubmit }) =>
   };
 
   const handleSubmit = async () => {
-    setSubmitting(true);
-    setSubmitStatus({ type: '', message: '' });
-    
-    // Validate form
-    const validation = validateForm();
-    setValidationErrors(validation.errors);
-    setWarnings(validation.warnings);
-    
-    if (validation.errors.length > 0) {
-      setSubmitStatus({ 
-        type: 'error', 
-        message: `Please fix the following errors: ${validation.errors.slice(0, 3).join(', ')}` 
-      });
-      setSubmitting(false);
-      return;
-    }
-    
-    try {
-      // Prepare submission data
-      const submissionData = {
-        examName: formData.examName.trim(),
-        examType: formData.examType,
-        academicYear: formData.academicYear.trim(),
-        startDate: formData.startDate.toISOString().split('T')[0],
-        endDate: formData.endDate.toISOString().split('T')[0],
-        classIds: formData.classIds,
-        subjects: formData.subjects.map(subject => ({
-          classId: subject.classId,
-          subjectId: subject.subjectId,
-          totalMarks: subject.totalMarks,
-          passingMarks: subject.passingMarks,
-          requiresExam: subject.requiresExam,
-          examDate: subject.examDate ? subject.examDate.toISOString().split('T')[0] : null,
-          startTime: formatTimeForDisplay(subject.startTime),
-          endTime: formatTimeForDisplay(subject.endTime),
-          duration: subject.duration
-        })),
-        weightage: formData.weightage,
-        nonWorkingDays: formData.nonWorkingDays.map(d => d.toISOString().split('T')[0]),
-        maxExamsPerDay: formData.maxExamsPerDay
-      };
+  setSubmitting(true);
+  setSubmitStatus({ type: '', message: '' });
 
-      if (debugMode) {
-        console.log('📤 Submitting exam schedule:', JSON.stringify(submissionData, null, 2));
-      }
+  const validation = validateForm();
+  setValidationErrors(validation.errors);
+  setWarnings(validation.warnings);
 
-      await onSubmit(submissionData);
-      setSubmitStatus({ type: 'success', message: 'Exam schedule created successfully!' });
-      
-      setTimeout(() => {
-        onClose();
-      }, 2000);
-      
-    } catch (error) {
-      console.error('❌ Submission error:', error);
-      
-      const errorMessage = error?.response?.data?.error || 
-                          error?.response?.data?.message || 
-                          error?.message || 
-                          'Failed to create exam schedule. Please try again.';
-      
-      setSubmitStatus({ type: 'error', message: errorMessage });
-    } finally {
-      setSubmitting(false);
+  if (validation.errors.length > 0) {
+    setSubmitStatus({
+      type: 'error',
+      message: `Please fix the following errors: ${validation.errors.slice(0, 3).join(', ')}`,
+    });
+    setSubmitting(false);
+    return;
+  }
+
+  try {
+    // Clean up availableRooms here
+    const cleanedAvailableRooms = formData.availableRooms
+      ? formData.availableRooms
+          .split(',')
+          .map(r => r.trim())
+          .filter(Boolean)
+      : [];
+
+    const submissionData = {
+      examName: formData.examName.trim(),
+      examType: formData.examType,
+      academicYear: formData.academicYear.trim(),
+      startDate: formData.startDate.toISOString().split('T')[0],
+      endDate: formData.endDate.toISOString().split('T')[0],
+      classIds: formData.classIds,
+      subjects: formData.subjects.map(subject => ({
+        classId: subject.classId,
+        subjectId: subject.subjectId,
+        totalMarks: subject.totalMarks,
+        passingMarks: subject.passingMarks,
+        requiresExam: subject.requiresExam,
+        examDate: subject.examDate ? subject.examDate.toISOString().split('T')[0] : null,
+        startTime: formatTimeForDisplay(subject.startTime),
+        endTime: formatTimeForDisplay(subject.endTime),
+        duration: subject.duration,
+      })),
+      weightage: formData.weightage,
+      nonWorkingDays: formData.nonWorkingDays.map(d => d.toISOString().split('T')[0]),
+      maxExamsPerDay: formData.maxExamsPerDay,
+
+      // Add this field if your backend expects it
+      availableRooms: cleanedAvailableRooms,
+    };
+
+    if (debugMode) {
+      console.log('📤 Submitting exam schedule:', JSON.stringify(submissionData, null, 2));
     }
-  };
+
+    await onSubmit(submissionData);
+    setSubmitStatus({ type: 'success', message: 'Exam schedule created successfully!' });
+
+    setTimeout(() => {
+      onClose();
+    }, 2000);
+  } catch (error) {
+    console.error('❌ Submission error:', error);
+
+    const errorMessage =
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      error?.message ||
+      'Failed to create exam schedule. Please try again.';
+
+    setSubmitStatus({ type: 'error', message: errorMessage });
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   // Effects
   useEffect(() => {
@@ -832,11 +842,8 @@ const ExamEventFormModal = ({ isOpen, onClose, examData, classes, onSubmit }) =>
           <TextField
             fullWidth
             label="Available Rooms"
-            value={formData.availableRooms?.join(", ") || ""}
-            onChange={(e) => {
-              const rooms = e.target.value.split(",").map(r => r.trim()).filter(Boolean);
-              handleInputChange('availableRooms', rooms);
-            }}
+            value={formData.availableRooms || ""}
+            onChange={(e) => handleInputChange('availableRooms', e.target.value)}
             placeholder="Room1, Room2, Room3..."
             helperText="Separate room names with commas"
           />

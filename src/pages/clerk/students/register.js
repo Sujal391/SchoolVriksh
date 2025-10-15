@@ -1,5 +1,6 @@
 // src/pages/clerk/students/register.js
 import { useAuth } from "../../../contexts/AuthContext";
+import { useEffect } from "react";
 import withProtectedRoute from "../../../components/common/ProtectedRoute";
 import ClerkLayout from "../../../components/layout/ClerkLayout";
 import ExistingStudentForm from "../../../components/clerk/admissions/ExistingStudentForm";
@@ -11,8 +12,13 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 const RegisterStudentPage = () => {
-  const { registerExistingStudent, classes, loading, error } = useClerk();
+  const { registerExistingStudent, classes, loading, error, fetchAvailableClasses } = useClerk();
   const router = useRouter();
+
+  // Only fetch classes data when this page loads
+  useEffect(() => {
+    fetchAvailableClasses();
+  }, []);
 
   const handleSubmit = async (studentData) => {
     try {
