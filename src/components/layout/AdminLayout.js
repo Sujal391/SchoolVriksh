@@ -20,7 +20,7 @@ const AdminLayout = ({ children }) => {
       <div className="flex-1 flex flex-col">
         <AdminHeader toggleSidebar={toggleSidebar} user={user} />
         
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50">
+        <main className="flex-1 overflow-y-auto sm:p-6 mt-18 lg:p-4 bg-gray-50">
           {children}
         </main>
       </div>     

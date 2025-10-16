@@ -1422,7 +1422,7 @@ const AdmissionFormsPage = () => {
           width: "100%",
           maxWidth: "1400px",
           mx: "auto",
-          py: { xs: 2, sm: 4, lg: 6 },
+          p: { xs: 2, sm: 4, lg: 3 },
         }}
       >
         <Box
@@ -1437,7 +1437,6 @@ const AdmissionFormsPage = () => {
             <Typography
               variant={isMobile ? "h5" : "h4"}
               fontWeight="700"
-              gutterBottom
               color="text.primary"
             >
               Admission Forms Management

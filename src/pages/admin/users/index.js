@@ -25,7 +25,7 @@ const UsersPage = () => {
     { value: "teacher", label: "Teacher" },
     { value: "clerk", label: "Clerk" },
     { value: "librarian", label: "Librarian" },
-    { value: "inventory manager", label: "Inventory Manager" },
+    { value: "inventory_manager", label: "Inventory Manager" },
     { value: "parent", label: "Parent" },
     { value: "transport", label: "Transport" },
     { value: "fee_manager", label: "Fee Manager" },
