@@ -122,6 +122,9 @@ const Dashboard = () => {
         case 'librarian':
           router.push('/library');
           break;
+        case 'inventory_manager':
+          router.push('/inventory/dashboard');
+          break;
         default:
           router.push('/dashboard'); // Default fallback
       }

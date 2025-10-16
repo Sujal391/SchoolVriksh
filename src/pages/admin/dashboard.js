@@ -199,7 +199,7 @@ const AdminDashboard = () => {
   return (
     <AdminLayout>
       {/* Main Dashboard Container - Fixed Height */}
-      <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden mt-10">
+      <div className="h-screen bg-gradient-to-br overflow-hidden">
         {/* Content Wrapper with Controlled Spacing */}
         <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col">
           

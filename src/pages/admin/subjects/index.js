@@ -3,7 +3,7 @@ import AdminLayout from "../../../components/layout/AdminLayout";
 import AdminService from "../../../services/adminService";
 import SubjectTable from "../../../components/admin/SubjectManagement";
 import SubjectFormModal from "../../../components/admin/SubjectFormModal";
-import SyllabusManagement from "../../../components/admin/SyllabusManagement";
+import SyllabusManagementTab from "../../../components/admin/SyllabusManagementTab";
 
 import {
   Button,
@@ -17,22 +17,20 @@ import {
   Tabs,
   Tab,
   Box,
-  Paper
+  Paper,
+  Stack
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import IconButton from "@mui/material/IconButton";
+import { Add } from "@mui/icons-material";
 
-// Tab Panel Component
-const TabPanel = ({ children, value, index, ...other }) => {
+const TabPanel = ({ children, value, index }) => {
   return (
     <div
       role="tabpanel"
       hidden={value !== index}
       id={`subject-tabpanel-${index}`}
       aria-labelledby={`subject-tab-${index}`}
-      {...other}
     >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+      {value === index && <Box>{children}</Box>}
     </div>
   );
 };
@@ -42,37 +40,26 @@ const SubjectsPage = () => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [error, setError] = useState("");
   const [selectedSubject, setSelectedSubject] = useState(null);
-  const [showError, setShowError] = useState(false);
-
-  // New state for delete functionality
+  
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [subjectToDelete, setSubjectToDelete] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-
-  // Tab state
-  const [tabValue, setTabValue] = useState(0);
-  const [selectedSubjectForSyllabus, setSelectedSubjectForSyllabus] = useState(null);
   
-  // Function to show error message with a timeout
-  const showErrorMessage = (message) => {
-    setError(message);
-    setShowError(true);
-    setSuccessMessage("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  
+  const [tabValue, setTabValue] = useState(0);
 
-    setTimeout(() => {
-      setShowError(false);
-      setError('');
-    }, 10000); // 10 seconds
+  const showError = (message) => {
+    setError(message);
+    setSuccess("");
+    setSnackbarOpen(true);
   };
 
-  // Function to show success message
-  const showSuccessMessage = (message) => {
-    setSuccessMessage(message);
+  const showSuccess = (message) => {
+    setSuccess(message);
     setError("");
-    setShowError(false);
     setSnackbarOpen(true);
   };
   
@@ -85,10 +72,9 @@ const SubjectsPage = () => {
         ]);
         setSubjects(subjectsRes.data);
         setClasses(classesRes.data);
-        setError("");
       } catch (error) {
         console.error("Error fetching data:", error);
-        showErrorMessage("Failed to load data");
+        showError("Failed to load data");
       } finally {
         setLoading(false);
       }
@@ -101,37 +87,31 @@ const SubjectsPage = () => {
     try {
       let response;
       if (selectedSubject) {
-        // Update existing subject
         response = await AdminService.updateSubject(selectedSubject._id, subjectData);
-        showSuccessMessage(`✅ Subject "${response.subject.name}" updated successfully!`);
+        showSuccess(`Subject "${response.subject.name}" updated successfully`);
       } else {
-        // Create new subject
         response = await AdminService.createSubject(subjectData);
-        showSuccessMessage(`✅ Subject "${subjectData.name}" created successfully!`);
+        showSuccess(`Subject "${subjectData.name}" created successfully`);
       }
 
-      // Refresh subject list
       const subjectsResponse = await AdminService.getAllSubjects();
       setSubjects(subjectsResponse.data);
       setIsModalOpen(false);
       setSelectedSubject(null);
-      setError("");
     } catch (error) {
       console.error("Error saving subject:", error);
 
-      // Handle specific API error responses
       if (error.response?.status === 404) {
-        showErrorMessage("❌ Subject not found. Please refresh the page and try again.");
+        showError("Subject not found. Please refresh and try again.");
       } else if (error.response?.status === 500) {
-        showErrorMessage("❌ Server error occurred. Please try again later.");
+        showError("Server error occurred. Please try again later.");
       } else {
         const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
-        showErrorMessage(`❌ Failed to ${selectedSubject ? 'update' : 'create'} subject: ${errorMessage}`);
+        showError(`Failed to ${selectedSubject ? 'update' : 'create'} subject: ${errorMessage}`);
       }
     }
   };
 
-  // Handle delete subject
   const handleDeleteSubject = (subject) => {
     setSubjectToDelete(subject);
     setDeleteDialogOpen(true);
@@ -140,9 +120,8 @@ const SubjectsPage = () => {
   const confirmDeleteSubject = async () => {
     try {
       await AdminService.deleteSubject(subjectToDelete._id);
-      showSuccessMessage(`✅ Subject "${subjectToDelete.name}" deleted successfully!`);
+      showSuccess(`Subject "${subjectToDelete.name}" deleted successfully`);
 
-      // Refresh subject list
       const response = await AdminService.getAllSubjects();
       setSubjects(response.data);
 
@@ -152,12 +131,12 @@ const SubjectsPage = () => {
       console.error("Error deleting subject:", error);
 
       if (error.response?.status === 404) {
-        showErrorMessage("❌ Subject not found. It may have already been deleted.");
+        showError("Subject not found. It may have already been deleted.");
       } else if (error.response?.status === 500) {
-        showErrorMessage("❌ Server error occurred. Please try again later.");
+        showError("Server error occurred. Please try again later.");
       } else {
         const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
-        showErrorMessage(`❌ Failed to delete subject: ${errorMessage}`);
+        showError(`Failed to delete subject: ${errorMessage}`);
       }
 
       setDeleteDialogOpen(false);
@@ -165,94 +144,71 @@ const SubjectsPage = () => {
     }
   };
 
-
-
-  const handleManageSyllabus = (subject) => {
-    setSelectedSubjectForSyllabus(subject);
-    setTabValue(1); // Switch to syllabus tab
-  };
-
   return (
     <AdminLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Subject Management</h1>
-          <div>
+      <Box sx={{ maxWidth: 1400, mx: 'auto', p: 3, mt: 4 }}>
+        {/* Header */}
+        <Stack 
+          direction="row" 
+          justifyContent="space-between" 
+          alignItems="center" 
+          sx={{ mb: 4 }}
+        >
+          <Typography variant="h4" fontWeight={600}>
+            Subject Management
+          </Typography>
+          {tabValue === 0 && (
             <Button
               variant="contained"
-              size="small"
+              startIcon={<Add />}
+              size="large"
               onClick={() => {
                 setSelectedSubject(null);
                 setIsModalOpen(true);
               }}
             >
-              Add New Subject
+              Add Subject
             </Button>
-          </div>
-        </div>
-        {showError && (
-          <Alert
-            severity="error"
-            sx={{ mb: 4 }}
-            action={
-              <IconButton
-                aria-label="close"
-                color="inherit"
-                size="small"
-                onClick={() => {
-                  setShowError(false);
-                  setError('');
-                }}
-              >
-                <CloseIcon fontSize="inherit" />
-              </IconButton>
-            }
-          >
-            {error}
-          </Alert>
-        )}
+          )}
+        </Stack>
 
-        {/* Tab Navigation */}
-        <Paper sx={{ mb: 3 }}>
+        {/* Tabs */}
+        <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs
               value={tabValue}
               onChange={(e, newValue) => setTabValue(newValue)}
-              variant="scrollable"
-              scrollButtons="auto"
-              allowScrollButtonsMobile
+              sx={{ px: 2 }}
             >
-              <Tab label="Subject Management" />
-              <Tab label="Syllabus Management" />
+              <Tab label="Subjects" sx={{ textTransform: 'none', fontSize: '0.95rem', fontWeight: 500 }} />
+              <Tab label="Syllabus" sx={{ textTransform: 'none', fontSize: '0.95rem', fontWeight: 500 }} />
             </Tabs>
           </Box>
 
-          {/* Tab Panel 0: Subject Management */}
+          {/* Subject Management Tab */}
           <TabPanel value={tabValue} index={0}>
-            <SubjectTable
-              subjects={subjects}
-              loading={loading}
-              onEdit={(subject) => {
-                setSelectedSubject(subject);
-                setIsModalOpen(true);
-              }}
-              onDelete={handleDeleteSubject}
-              onManageSyllabus={handleManageSyllabus}
-            />
+            <Box sx={{ p: 3 }}>
+              <SubjectTable
+                subjects={subjects}
+                loading={loading}
+                onEdit={(subject) => {
+                  setSelectedSubject(subject);
+                  setIsModalOpen(true);
+                }}
+                onDelete={handleDeleteSubject}
+              />
+            </Box>
           </TabPanel>
 
-          {/* Tab Panel 1: Syllabus Management */}
+          {/* Syllabus Management Tab */}
           <TabPanel value={tabValue} index={1}>
-            <SyllabusManagement
-              selectedSubject={selectedSubjectForSyllabus}
-              onClose={() => {
-                setSelectedSubjectForSyllabus(null);
-                setTabValue(0);
-              }}
-            />
+            <Box sx={{ p: 3 }}>
+              <SyllabusManagementTab />
+            </Box>
           </TabPanel>
         </Paper>
 
+        {/* Subject Form Modal */}
         <SubjectFormModal
           isOpen={isModalOpen}
           onClose={() => {
@@ -268,52 +224,48 @@ const SubjectsPage = () => {
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
-          maxWidth="sm"
+          maxWidth="xs"
           fullWidth
         >
-          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 600 }}>
+            Delete Subject
+          </DialogTitle>
           <DialogContent>
             <Typography>
-              Are you sure you want to delete the subject "{subjectToDelete?.name}"?
-              This action cannot be undone and will remove the subject from all associated classes.
+              Are you sure you want to delete "{subjectToDelete?.name}"? This action cannot be undone.
             </Typography>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
             <Button
               variant="contained"
               color="error"
               onClick={confirmDeleteSubject}
             >
-              Delete Subject
+              Delete
             </Button>
           </DialogActions>
         </Dialog>
 
-
-
-        {/* Success/Error Snackbar */}
+        {/* Notification Snackbar */}
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={6000}
-          onClose={() => {
-            setSnackbarOpen(false);
-            setSuccessMessage("");
-          }}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          onClose={() => setSnackbarOpen(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
-            onClose={() => {
-              setSnackbarOpen(false);
-              setSuccessMessage("");
-            }}
-            severity="success"
+            onClose={() => setSnackbarOpen(false)}
+            severity={error ? 'error' : 'success'}
             variant="filled"
+            sx={{ width: '100%' }}
           >
-            {successMessage}
+            {error || success}
           </Alert>
         </Snackbar>
-      </div>
+      </Box>
     </AdminLayout>
   );
 };
