@@ -141,10 +141,20 @@ const AdminService = {
     api.delete(`/admin/subjects/${subjectId}`).then((res) => res.data),
   reassignSubject: (reassignData) =>
     api.post("/admin/teachers/reassign-subject", reassignData).then((res) => res.data),
-  uploadSyllabus: (subjectId, formData) =>
-    api.post(`/admin/subjects/${subjectId}/syllabus`, formData),
-  getSyllabus: (subjectId) =>
-    api.get(`/admin/subjects/${subjectId}/syllabus`).then((res) => res.data),
+
+  // Syllabus Management
+  getClassesForSyllabus: () =>
+    api.get("/admin/classes").then((res) => res.data),
+  getSubjectsWithSyllabusStatus: (classId) =>
+    api.get(`/admin/classes/${classId}/subjects`).then((res) => res.data),
+  uploadSyllabus: (classId, subjectId, formData) =>
+    api.post(`/admin/classes/${classId}/subjects/${subjectId}/syllabus`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then((res) => res.data),
+  getSyllabus: (classId, subjectId) =>
+    api.get(`/admin/classes/${classId}/subjects/${subjectId}/syllabus`).then((res) => res.data),
+  deleteSyllabus: (classId, subjectId, documentId) =>
+    api.delete(`/admin/classes/${classId}/subjects/${subjectId}/syllabus/documents/${documentId}`).then((res) => res.data),
 
   // Timetable Management
   getClassesWithSubjects: () =>

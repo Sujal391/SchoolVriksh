@@ -18,7 +18,9 @@ import {
   Tab,
   Box,
   Paper,
-  Stack
+  Stack,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 
@@ -41,14 +43,15 @@ const SubjectsPage = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
-  
+  const [selectedClass, setSelectedClass] = useState("");
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [subjectToDelete, setSubjectToDelete] = useState(null);
-  
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  
+
   const [tabValue, setTabValue] = useState(0);
 
   const showError = (message) => {
@@ -57,12 +60,16 @@ const SubjectsPage = () => {
     setSnackbarOpen(true);
   };
 
+  const filteredSubjects = selectedClass
+    ? subjects.filter((sub) => sub.class?._id === selectedClass)
+    : subjects;
+
   const showSuccess = (message) => {
     setSuccess(message);
     setError("");
     setSnackbarOpen(true);
   };
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -87,7 +94,10 @@ const SubjectsPage = () => {
     try {
       let response;
       if (selectedSubject) {
-        response = await AdminService.updateSubject(selectedSubject._id, subjectData);
+        response = await AdminService.updateSubject(
+          selectedSubject._id,
+          subjectData
+        );
         showSuccess(`Subject "${response.subject.name}" updated successfully`);
       } else {
         response = await AdminService.createSubject(subjectData);
@@ -106,8 +116,15 @@ const SubjectsPage = () => {
       } else if (error.response?.status === 500) {
         showError("Server error occurred. Please try again later.");
       } else {
-        const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
-        showError(`Failed to ${selectedSubject ? 'update' : 'create'} subject: ${errorMessage}`);
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message;
+        showError(
+          `Failed to ${
+            selectedSubject ? "update" : "create"
+          } subject: ${errorMessage}`
+        );
       }
     }
   };
@@ -135,7 +152,10 @@ const SubjectsPage = () => {
       } else if (error.response?.status === 500) {
         showError("Server error occurred. Please try again later.");
       } else {
-        const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message;
         showError(`Failed to delete subject: ${errorMessage}`);
       }
 
@@ -146,42 +166,77 @@ const SubjectsPage = () => {
 
   return (
     <AdminLayout>
-      <Box sx={{ maxWidth: 1400, mx: 'auto', p: 3, mt: 4 }}>
+      <Box sx={{ maxWidth: 1400, mx: "auto", p: 3 }}>
         {/* Header */}
-        <Stack 
-          direction="row" 
-          justifyContent="space-between" 
-          alignItems="center" 
-          sx={{ mb: 4 }}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 3 }}
         >
           <Typography variant="h4" fontWeight={600}>
             Subject Management
           </Typography>
+
           {tabValue === 0 && (
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              size="large"
-              onClick={() => {
-                setSelectedSubject(null);
-                setIsModalOpen(true);
-              }}
-            >
-              Add Subject
-            </Button>
+            <Box display="flex" alignItems="center" gap={2}>
+              <Typography sx={{ whiteSpace: "nowrap" }}>
+                Filter by Class:
+              </Typography>
+              <Select
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                displayEmpty
+                size="small"
+              >
+                <MenuItem value="">All Classes</MenuItem>
+                {classes.map((cls) => (
+                  <MenuItem key={cls._id} value={cls._id}>
+                    {cls.name} {cls.division && `(${cls.division})`}
+                  </MenuItem>
+                ))}
+              </Select>
+
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => {
+                  setSelectedSubject(null);
+                  setIsModalOpen(true);
+                }}
+              >
+                Add Subject
+              </Button>
+            </Box>
           )}
         </Stack>
-
         {/* Tabs */}
-        <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Paper
+          elevation={0}
+          sx={{ border: "1px solid", borderColor: "divider" }}
+        >
+          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
             <Tabs
               value={tabValue}
               onChange={(e, newValue) => setTabValue(newValue)}
               sx={{ px: 2 }}
             >
-              <Tab label="Subjects" sx={{ textTransform: 'none', fontSize: '0.95rem', fontWeight: 500 }} />
-              <Tab label="Syllabus" sx={{ textTransform: 'none', fontSize: '0.95rem', fontWeight: 500 }} />
+              <Tab
+                label="Subjects"
+                sx={{
+                  textTransform: "none",
+                  fontSize: "0.95rem",
+                  fontWeight: 500,
+                }}
+              />
+              <Tab
+                label="Syllabus"
+                sx={{
+                  textTransform: "none",
+                  fontSize: "0.95rem",
+                  fontWeight: 500,
+                }}
+              />
             </Tabs>
           </Box>
 
@@ -189,7 +244,7 @@ const SubjectsPage = () => {
           <TabPanel value={tabValue} index={0}>
             <Box sx={{ p: 3 }}>
               <SubjectTable
-                subjects={subjects}
+                subjects={filteredSubjects}
                 loading={loading}
                 onEdit={(subject) => {
                   setSelectedSubject(subject);
@@ -227,18 +282,15 @@ const SubjectsPage = () => {
           maxWidth="xs"
           fullWidth
         >
-          <DialogTitle sx={{ fontWeight: 600 }}>
-            Delete Subject
-          </DialogTitle>
+          <DialogTitle sx={{ fontWeight: 600 }}>Delete Subject</DialogTitle>
           <DialogContent>
             <Typography>
-              Are you sure you want to delete "{subjectToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete "{subjectToDelete?.name}"? This
+              action cannot be undone.
             </Typography>
           </DialogContent>
           <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
             <Button
               variant="contained"
               color="error"
@@ -254,13 +306,13 @@ const SubjectsPage = () => {
           open={snackbarOpen}
           autoHideDuration={6000}
           onClose={() => setSnackbarOpen(false)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
           <Alert
             onClose={() => setSnackbarOpen(false)}
-            severity={error ? 'error' : 'success'}
+            severity={error ? "error" : "success"}
             variant="filled"
-            sx={{ width: '100%' }}
+            sx={{ width: "100%" }}
           >
             {error || success}
           </Alert>

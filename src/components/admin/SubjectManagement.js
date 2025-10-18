@@ -39,7 +39,7 @@ const SubjectTable = ({ subjects, onEdit, onDelete, loading }) => {
   const paginatedSubjects = subjects.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   return (
-    <Paper className="overflow-x-auto p-2" sx={{ mt: 2 }}>
+    <Paper className="overflow-x-auto p-2">
       
       <TableContainer>
         <Table>
